@@ -46,14 +46,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               to={item.to}
               className="sidebar__link"
               activeProps={{ className: 'sidebar__link sidebar__link--active' }}
-              onClick={
-                item.to === '/chat'
-                  ? () => {
-                      setActiveConversation(null)
-                      onClose()
-                    }
-                  : undefined
-              }
+              onClick={() => {
+                if (item.to === '/chat') {
+                  setActiveConversation(null)
+                }
+                onClose()
+              }}
             >
               <span className="material-symbols-outlined sidebar__icon">{item.icon}</span>
               {item.label}
