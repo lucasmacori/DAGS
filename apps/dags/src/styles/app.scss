@@ -394,6 +394,77 @@ textarea {
   background: $surface-high;
 }
 
+.chat-skeleton-block {
+  width: 100%;
+}
+
+.chat-skeleton-label {
+  align-items: center;
+}
+
+.chat-skeleton-badge,
+.chat-skeleton-line {
+  display: inline-flex;
+  position: relative;
+  overflow: hidden;
+  background: rgba($surface-highest, 0.7);
+}
+
+.chat-skeleton-badge::after,
+.chat-skeleton-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: chat-skeleton-shimmer 1.5s infinite;
+}
+
+.chat-skeleton-badge {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+}
+
+.chat-skeleton-bubble {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chat-skeleton-bubble--user {
+  min-width: min(30rem, 100%);
+}
+
+.chat-skeleton-line {
+  height: 0.9rem;
+  border-radius: 999px;
+}
+
+.chat-skeleton-line--label {
+  width: 5.5rem;
+}
+
+.chat-skeleton-line--wide {
+  width: min(32rem, 100%);
+}
+
+.chat-skeleton-line--medium {
+  width: min(24rem, 78%);
+}
+
+.chat-skeleton-line--narrow {
+  width: min(17rem, 52%);
+}
+
+.chat-skeleton-line--short {
+  width: min(12rem, 40%);
+}
+
 .chat-bubble__text {
   margin: 0;
   color: $text-primary;
@@ -550,6 +621,12 @@ textarea {
   text-align: center;
   color: rgba($text-secondary, 0.6);
   font-size: 0.75rem;
+}
+
+@keyframes chat-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .translate-canvas {

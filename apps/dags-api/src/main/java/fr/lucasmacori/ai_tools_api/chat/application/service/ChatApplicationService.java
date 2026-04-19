@@ -1,13 +1,13 @@
 package fr.lucasmacori.ai_tools_api.chat.application.service;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import fr.lucasmacori.ai_tools_api.chat.application.dto.ChatRequestBody;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
 import fr.lucasmacori.ai_tools_api.chat.domain.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -28,5 +28,9 @@ public class ChatApplicationService {
 
 	public Conversation createConversation(final String name) {
 		return chatService.createConversation(name);
+	}
+
+	public ConversationHistoryPage getConversationHistory(String conversationId, int page) {
+		return chatService.getConversationHistory(conversationId, page);
 	}
 }

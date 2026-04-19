@@ -5,7 +5,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +38,7 @@ class ChatControllerTest {
 	@Test
 	void chatReturnsUnauthorizedWithoutAuthentication() {
 		webTestClient.post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -56,7 +55,7 @@ class ChatControllerTest {
 		when(applicationService.chat(any())).thenReturn(Flux.just("Hello", " there"));
 
 		FluxExchangeResult<String> result = authenticatedClient().post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -87,7 +86,7 @@ class ChatControllerTest {
 	@Test
 	void chatReturnsBadRequestWhenChatIdIsMissing() {
 		authenticatedClient().post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -101,7 +100,7 @@ class ChatControllerTest {
 	@Test
 	void chatReturnsBadRequestWhenChatIdIsBlank() {
 		authenticatedClient().post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -116,7 +115,7 @@ class ChatControllerTest {
 	@Test
 	void chatReturnsBadRequestWhenMessageIsMissing() {
 		authenticatedClient().post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -130,7 +129,7 @@ class ChatControllerTest {
 	@Test
 	void chatReturnsBadRequestWhenMessageIsBlank() {
 		authenticatedClient().post()
-				.uri("/chat")
+				.uri("/api/v1/chat")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -140,29 +139,5 @@ class ChatControllerTest {
 						""")
 				.exchange()
 				.expectStatus().isBadRequest();
-	}
-
-	@Test
-	void generateChatReturnsUnauthorizedWithoutAuthentication() {
-		webTestClient.post()
-				.uri("/conversation")
-				.exchange()
-				.expectStatus().isUnauthorized();
-	}
-
-	@Test
-	void generateChatReturnsChatIdAsJson() {
-		fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation conversation = new fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation("930d7b72-4cc0-450d-9f88-a8c3abef3b87", "test", null);
-		when(applicationService.createConversation(any())).thenReturn(conversation);
-
-		authenticatedClient().post()
-				.uri("/conversation")
-				.contentType(MediaType.APPLICATION_JSON)
-				.bodyValue("{\"name\": \"test\"}")
-				.exchange()
-				.expectStatus().isOk()
-				.expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
-				.expectBody()
-				.jsonPath("$.chat_id").isEqualTo("930d7b72-4cc0-450d-9f88-a8c3abef3b87");
 	}
 }

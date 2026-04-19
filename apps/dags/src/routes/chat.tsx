@@ -8,10 +8,23 @@ type ChatMessage = {
   role: 'user' | 'assistant'
   text: string
   timestamp: string
+  id?: string
   title?: string
   trailingText?: string
   codeTitle?: string
   code?: string
+}
+
+type ConversationHistoryResponse = {
+  page: number
+  size: number
+  messages: Array<{
+    message_id: string
+    conversation_id: string
+    role: 'USER' | 'ASSISTANT'
+    content: string
+    created_at: string
+  }>
 }
 
 const chatModel = 'gemma4:e2b'
@@ -131,6 +144,7 @@ function ChatPage() {
   const [messages, setMessages] = useState<Array<ChatMessage>>([])
   const [isStartingChat, setIsStartingChat] = useState(false)
   const [isSendingMessage, setIsSendingMessage] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const threadRef = useRef<HTMLDivElement | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
@@ -151,10 +165,82 @@ function ChatPage() {
     event.currentTarget.form?.requestSubmit()
   }
 
+  function formatTimestamp(value: string) {
+    const date = new Date(value)
+
+    if (Number.isNaN(date.getTime())) {
+      return value
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date)
+  }
+
+  function mapHistoryMessages(payload: ConversationHistoryResponse): Array<ChatMessage> {
+    return [...payload.messages]
+      .reverse()
+      .map((item) => ({
+        id: item.message_id,
+        role: item.role === 'ASSISTANT' ? 'assistant' : 'user',
+        text: item.content,
+        timestamp: formatTimestamp(item.created_at),
+        title: item.role === 'ASSISTANT' ? 'DAGS AI' : undefined,
+      }))
+  }
+
   useEffect(() => {
-    setMessages([])
-    setError(null)
-    composerRef.current?.focus()
+    let isCancelled = false
+
+    async function loadHistory() {
+      if (!activeConversation?.conversationId) {
+        setMessages([])
+        setError(null)
+        composerRef.current?.focus()
+        return
+      }
+
+      setMessages([])
+      setError(null)
+      setIsLoadingHistory(true)
+
+      try {
+        const response = await fetch(
+          `/conversation/${activeConversation.conversationId}/history?page=0`,
+        )
+
+        if (!response.ok) {
+          const message = (await response.text()).trim()
+          throw new Error(message || 'Could not load conversation history.')
+        }
+
+        const payload = (await response.json()) as ConversationHistoryResponse
+
+        if (!isCancelled) {
+          setMessages(mapHistoryMessages(payload))
+        }
+      } catch (caughtError) {
+        if (!isCancelled) {
+          setError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : 'Could not load conversation history.',
+          )
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingHistory(false)
+          composerRef.current?.focus()
+        }
+      }
+    }
+
+    void loadHistory()
+
+    return () => {
+      isCancelled = true
+    }
   }, [activeConversation])
 
   useEffect(() => {
@@ -378,9 +464,13 @@ function ChatPage() {
       </header>
 
       <div ref={threadRef} className="chat-thread" aria-label="Chat messages">
+        {isLoadingHistory ? (
+          <ConversationHistorySkeleton />
+        ) : null}
+
         {messages.map((messageItem, index) => (
           <article
-            key={`${messageItem.role}-${index}`}
+            key={messageItem.id ?? `${messageItem.role}-${index}`}
             className={`chat-row chat-row--${messageItem.role}`}
           >
             {messageItem.role === 'assistant' ? (
@@ -562,5 +652,50 @@ function CodeCard({ code, title }: { code: string; title: string }) {
       </header>
       <pre className="chat-code-card__body">{code}</pre>
     </section>
+  )
+}
+
+function ConversationHistorySkeleton() {
+  return (
+    <>
+      <article className="chat-row chat-row--assistant" aria-hidden="true">
+        <div className="chat-assistant-block chat-skeleton-block">
+          <div className="chat-assistant-label chat-skeleton-label">
+            <span className="chat-assistant-badge chat-skeleton-badge" />
+            <span className="chat-skeleton-line chat-skeleton-line--label" />
+          </div>
+
+          <div className="chat-assistant-bubble chat-skeleton-bubble">
+            <span className="chat-skeleton-line chat-skeleton-line--wide" />
+            <span className="chat-skeleton-line chat-skeleton-line--medium" />
+            <span className="chat-skeleton-line chat-skeleton-line--narrow" />
+          </div>
+        </div>
+      </article>
+
+      <article className="chat-row chat-row--user" aria-hidden="true">
+        <div className="chat-user-block chat-skeleton-block">
+          <div className="chat-user-bubble chat-skeleton-bubble chat-skeleton-bubble--user">
+            <span className="chat-skeleton-line chat-skeleton-line--medium" />
+            <span className="chat-skeleton-line chat-skeleton-line--short" />
+          </div>
+        </div>
+      </article>
+
+      <article className="chat-row chat-row--assistant" aria-hidden="true">
+        <div className="chat-assistant-block chat-skeleton-block">
+          <div className="chat-assistant-label chat-skeleton-label">
+            <span className="chat-assistant-badge chat-skeleton-badge" />
+            <span className="chat-skeleton-line chat-skeleton-line--label" />
+          </div>
+
+          <div className="chat-assistant-bubble chat-skeleton-bubble">
+            <span className="chat-skeleton-line chat-skeleton-line--wide" />
+            <span className="chat-skeleton-line chat-skeleton-line--wide" />
+            <span className="chat-skeleton-line chat-skeleton-line--short" />
+          </div>
+        </div>
+      </article>
+    </>
   )
 }

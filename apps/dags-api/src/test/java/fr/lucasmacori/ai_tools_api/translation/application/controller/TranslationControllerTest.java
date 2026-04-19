@@ -38,7 +38,7 @@ class TranslationControllerTest {
 	@Test
 	void translateReturnsUnauthorizedWithoutAuthentication() {
 		webTestClient.post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -55,7 +55,7 @@ class TranslationControllerTest {
 		when(applicationService.translate(any())).thenReturn(Flux.just("Translated text"));
 
 		FluxExchangeResult<String> result = authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -85,7 +85,7 @@ class TranslationControllerTest {
 	@Test
 	void translateReturnsBadRequestWhenTargetLanguageIsMissing() {
 		authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -99,7 +99,7 @@ class TranslationControllerTest {
 	@Test
 	void translateReturnsBadRequestWhenTargetLanguageIsBlank() {
 		authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -114,7 +114,7 @@ class TranslationControllerTest {
 	@Test
 	void translateReturnsBadRequestWhenTextIsMissing() {
 		authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -128,7 +128,7 @@ class TranslationControllerTest {
 	@Test
 	void translateReturnsBadRequestWhenTextIsBlank() {
 		authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{
@@ -145,7 +145,7 @@ class TranslationControllerTest {
 		when(applicationService.translate(any())).thenReturn(Flux.just("Translated text"));
 
 		authenticatedClient().post()
-				.uri("/translate")
+				.uri("/api/v1/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
 						{

@@ -2,25 +2,33 @@ package fr.lucasmacori.ai_tools_api.chat.domain.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessage;
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessageRole;
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.spi.ChatGenerator;
 import reactor.core.publisher.Flux;
-
-import static org.mockito.Mockito.mock;
 
 class ChatServiceTest {
 
 	@Test
 	void chatUsesDefaultModelWhenRequestModelIsMissing() {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
-		fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository repo = mock(fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository.class);
-		ChatService service = new ChatService(generator, "default-model", "System prompt", repo);
+		IConversationRepository conversationRepository = mock(IConversationRepository.class);
+		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository);
 
 		List<String> response = service.chat(new ChatRequest(UUID.randomUUID().toString(), "Hello", null))
 				.collectList()
@@ -31,13 +39,16 @@ class ChatServiceTest {
 		assertEquals("System prompt", generator.systemPrompt);
 		assertTrue(generator.chatId != null && !generator.chatId.isBlank());
 		assertEquals("Hello", generator.userMessage);
+		verify(historyRepository).addMessage(generator.chatId, ConversationMessageRole.USER, "Hello");
+		verify(historyRepository).addMessage(generator.chatId, ConversationMessageRole.ASSISTANT, "Hi");
 	}
 
 	@Test
 	void chatUsesRequestModelWhenProvided() {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
-		fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository repo = mock(fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository.class);
-		ChatService service = new ChatService(generator, "default-model", "System prompt", repo);
+		IConversationRepository conversationRepository = mock(IConversationRepository.class);
+		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository);
 
 		service.chat(new ChatRequest("chat-1", "Hello", "mistral"))
 				.collectList()
@@ -46,6 +57,23 @@ class ChatServiceTest {
 		assertEquals("chat-1", generator.chatId);
 		assertEquals("Hello", generator.userMessage);
 		assertEquals("mistral", generator.model);
+	}
+
+	@Test
+	void getConversationHistoryUsesFirstPageWithTwentyMessages() {
+		IConversationRepository conversationRepository = mock(IConversationRepository.class);
+		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		ConversationHistoryPage historyPage = new ConversationHistoryPage(
+				0,
+				20,
+				List.of(new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", LocalDateTime.now())));
+		when(historyRepository.getConversationHistory("chat-1", 0, 20)).thenReturn(historyPage);
+		ChatService service = new ChatService((chatId, systemPrompt, userMessage, model) -> Flux.just("Hi"), "default-model", "System prompt", conversationRepository, historyRepository);
+
+		ConversationHistoryPage result = service.getConversationHistory("chat-1", 0);
+
+		assertEquals(historyPage, result);
+		verify(historyRepository).getConversationHistory("chat-1", 0, 20);
 	}
 
 	private static final class CapturingChatGenerator implements ChatGenerator {
