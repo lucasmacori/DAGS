@@ -223,7 +223,7 @@ textarea {
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
-  background: rgba(10, 10, 12, 0.78);
+  background: rgba(19, 19, 21, 0.8);
   backdrop-filter: blur(24px);
 }
 
@@ -451,6 +451,7 @@ textarea {
 }
 
 .chat-composer-input {
+  height: 1.5rem;
   min-height: 1.5rem;
   max-height: 8rem;
   flex: 1;
@@ -459,6 +460,9 @@ textarea {
   color: $text-primary;
   line-height: 1.5;
   outline: 0;
+  padding: 0;
+  margin-top: 0.625rem;
+  margin-bottom: 0.625rem;
 }
 
 .chat-composer-input::placeholder {

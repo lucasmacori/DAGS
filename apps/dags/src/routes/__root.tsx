@@ -1,3 +1,4 @@
+import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
   HeadContent,
   Link,
@@ -6,10 +7,9 @@ import {
   useRouterState,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import appCss from '../styles/app.scss?url'
 import { sidebarUsers } from '../lib/workspace-mocks'
+import appCss from '../styles/app.scss?url'
 
 const navigationItems = [
   { to: '/chat', label: 'Chat', icon: 'forum' },
@@ -33,7 +33,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'AI Tools',
+        title: 'DAGS',
       },
     ],
     links: [

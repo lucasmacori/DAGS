@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useState, type FormEvent } from 'react'
 
 type LanguageOption = {
   value: string
@@ -8,22 +8,26 @@ type LanguageOption = {
 
 function extractStreamText(buffer: string) {
   const normalizedBuffer = buffer.replace(/\r\n/g, '\n')
-  const lines = normalizedBuffer.split('\n')
-  const trailingLine = normalizedBuffer.endsWith('\n') ? '' : (lines.pop() ?? '')
+  const events = normalizedBuffer.split('\n\n')
+  const trailingLine = events.pop() ?? ''
   let extractedText = ''
 
-  for (const line of lines) {
-    if (!line.startsWith('data:')) {
-      continue
+  for (const event of events) {
+    const lines = event.split('\n')
+    const dataLines: string[] = []
+
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        const value = line.slice(5)
+        if (value !== '[DONE]') {
+          dataLines.push(value)
+        }
+      }
     }
 
-    const value = line.slice(5)
-
-    if (value === '[DONE]') {
-      continue
+    if (dataLines.length > 0) {
+      extractedText += dataLines.join('\n')
     }
-
-    extractedText += value
   }
 
   return {
@@ -172,7 +176,7 @@ function TranslatePage() {
     <section className="translate-screen">
       <header className="topbar">
         <div className="topbar__title-group">
-          <h1 className="topbar__title topbar__title--simple">Translate</h1>
+          <h1 className="topbar__title">Translate</h1>
         </div>
       </header>
 

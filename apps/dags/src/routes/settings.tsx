@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import {
   appearanceOptions,
-  settingsProfileAvatar,
   settingsApiKeys,
+  settingsProfileAvatar,
   workspaceUser,
 } from '../lib/workspace-mocks'
 
@@ -16,7 +16,7 @@ function SettingsPage() {
     <section className="settings-screen">
       <header className="topbar">
         <div className="topbar__title-group">
-          <h1 className="topbar__title topbar__title--simple">Settings</h1>
+          <h1 className="topbar__title">Settings</h1>
         </div>
 
         <div className="topbar__actions">

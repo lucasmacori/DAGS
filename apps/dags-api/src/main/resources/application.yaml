@@ -6,16 +6,24 @@ spring:
       base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         options:
-          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:llama3.2}
+          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e2b}
 
 translation:
   prompt:
     system: ${TRANSLATION_PROMPT_SYSTEM:You are a professional translator. Translate the user text exactly into the target language. Preserve meaning, tone, and formatting. Return only the translated text. When encountering values like \n keep them}
 
 chat:
-  default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:llama3.2}}
+  default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e2b}}
   prompt:
-    system: ${CHAT_PROMPT_SYSTEM:You are a helpful AI assistant. Answer clearly and accurately. Keep the conversation natural.}
+    system: >-
+      ${CHAT_PROMPT_SYSTEM:You are a helpful AI assistant. Answer clearly and accurately. Keep the conversation natural. When generating code, always format it inside a markdown block with the correct language tag. Ensure there is a line break after the opening marker and before the closing marker. For example, if you write Python functions, use this exact style:
+
+      ```python
+      def my_function():
+          ...
+      ```
+
+      You can provide explanations before and after the code blocks.}
   memory:
     provider: ${CHAT_MEMORY_PROVIDER:in-memory}
     max-messages: ${CHAT_MEMORY_MAX_MESSAGES:20}

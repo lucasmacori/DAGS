@@ -17,22 +17,26 @@ const chatModel = 'gemma4:e2b'
 
 function extractStreamText(buffer: string) {
   const normalizedBuffer = buffer.replace(/\r\n/g, '\n')
-  const lines = normalizedBuffer.split('\n')
-  const trailingLine = normalizedBuffer.endsWith('\n') ? '' : (lines.pop() ?? '')
+  const events = normalizedBuffer.split('\n\n')
+  const trailingLine = events.pop() ?? ''
   let extractedText = ''
 
-  for (const line of lines) {
-    if (!line.startsWith('data:')) {
-      continue
+  for (const event of events) {
+    const lines = event.split('\n')
+    const dataLines: string[] = []
+
+    for (const line of lines) {
+      if (line.startsWith('data:')) {
+        const value = line.slice(5)
+        if (value !== '[DONE]') {
+          dataLines.push(value)
+        }
+      }
     }
 
-    const value = line.slice(5)
-
-    if (value === '[DONE]') {
-      continue
+    if (dataLines.length > 0) {
+      extractedText += dataLines.join('\n')
     }
-
-    extractedText += value
   }
 
   return {
@@ -282,16 +286,18 @@ function ChatPage() {
                 </div>
 
                 <div className="chat-assistant-bubble">
-                  <p className="chat-bubble__text">{messageItem.text}</p>
+                  {parseMessageContent(messageItem.text).map((block, i) =>
+                    block.type === 'text' ? (
+                      <p key={i} className="chat-bubble__text">
+                        {block.content}
+                      </p>
+                    ) : (
+                      <CodeCard key={i} title={block.language} code={block.content} />
+                    )
+                  )}
 
                   {messageItem.code ? (
-                    <section className="chat-code-card">
-                      <header className="chat-code-card__header">
-                        <span>{messageItem.codeTitle}</span>
-                        <span className="material-symbols-outlined">content_copy</span>
-                      </header>
-                      <pre className="chat-code-card__body">{messageItem.code}</pre>
-                    </section>
+                    <CodeCard title={messageItem.codeTitle || 'Code'} code={messageItem.code} />
                   ) : null}
 
                   {messageItem.trailingText ? (
@@ -319,7 +325,7 @@ function ChatPage() {
           </article>
         ))}
 
-        {isSendingMessage ? (
+        {isSendingMessage && messages.at(-1)?.role === 'user' ? (
           <article className="chat-row chat-row--assistant">
             <div className="chat-assistant-block">
               <div className="chat-assistant-label">
@@ -380,6 +386,74 @@ function ChatPage() {
           {error ?? (chatId ? `Chat ID: ${chatId}` : 'DAGS can make mistakes. Verify critical technical information.')}
         </p>
       </footer>
+    </section>
+  )
+}
+
+type ParsedBlock =
+  | { type: 'text'; content: string }
+  | { type: 'code'; language: string; content: string }
+
+function parseMessageContent(text: string): ParsedBlock[] {
+  const blocks: ParsedBlock[] = []
+  const codeBlockRegex = /```([\w-]*)\n([\s\S]*?)(```|$)/g
+  let lastIndex = 0
+  let match
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      blocks.push({
+        type: 'text',
+        content: text.slice(lastIndex, match.index),
+      })
+    }
+
+    blocks.push({
+      type: 'code',
+      language: match[1] || 'Code',
+      content: match[2].trim(),
+    })
+
+    lastIndex = match.index + match[0].length
+  }
+
+  if (lastIndex < text.length) {
+    blocks.push({
+      type: 'text',
+      content: text.slice(lastIndex),
+    })
+  }
+
+  return blocks
+}
+
+function CodeCard({ code, title }: { code: string; title: string }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => {
+      setCopied(false)
+    }, 2000)
+  }
+
+  return (
+    <section className="chat-code-card">
+      <header className="chat-code-card__header">
+        <span>{title || 'Code'}</span>
+        <button
+          className="icon-button"
+          type="button"
+          aria-label="Copy code"
+          onClick={handleCopy}
+        >
+          <span className="material-symbols-outlined">
+            {copied ? 'check' : 'content_copy'}
+          </span>
+        </button>
+      </header>
+      <pre className="chat-code-card__body">{code}</pre>
     </section>
   )
 }
