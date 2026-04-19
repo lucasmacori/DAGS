@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { getAiToolsApiConfig } from '../../lib/ai-tools-api'
 
 type TranslateRequest = {
   base_language: string | null
@@ -10,22 +11,16 @@ export const Route = createFileRoute('/api/translate')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiBaseUrl = process.env.AI_TOOLS_API_BASE_URL?.trim()
-        const apiUsername = process.env.AI_TOOLS_API_USERNAME?.trim()
-        const apiPassword = process.env.AI_TOOLS_API_PASSWORD?.trim()
+        let apiBaseUrl: string
+        let authorization: string
 
-        if (!apiBaseUrl) {
-          return new Response('AI_TOOLS_API_BASE_URL is not configured.', {
-            status: 500,
-            headers: {
-              'Content-Type': 'text/plain; charset=utf-8',
-            },
-          })
-        }
-
-        if (!apiUsername || !apiPassword) {
+        try {
+          const config = getAiToolsApiConfig()
+          apiBaseUrl = config.apiBaseUrl
+          authorization = config.authorization
+        } catch (error) {
           return new Response(
-            'AI_TOOLS_API_USERNAME and AI_TOOLS_API_PASSWORD must be configured.',
+            error instanceof Error ? error.message : 'API configuration is invalid.',
             {
               status: 500,
               headers: {
@@ -52,11 +47,11 @@ export const Route = createFileRoute('/api/translate')({
         }
 
         const upstreamResponse = await fetch(
-          `${apiBaseUrl.replace(/\/$/, '')}/translate`,
+          `${apiBaseUrl}/translate`,
           {
             method: 'POST',
             headers: {
-              Authorization: `Basic ${Buffer.from(`${apiUsername}:${apiPassword}`).toString('base64')}`,
+              Authorization: authorization,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),

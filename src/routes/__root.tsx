@@ -45,6 +45,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <div className="sidebar__brand">AI Tools</div>
             <nav className="sidebar__nav" aria-label="Primary navigation">
               <Link
+                to="/chat"
+                className="sidebar__link"
+                activeProps={{ className: 'sidebar__link sidebar__link--active' }}
+              >
+                Chat
+              </Link>
+
+              <Link
                 to="/translate"
                 className="sidebar__link"
                 activeProps={{ className: 'sidebar__link sidebar__link--active' }}

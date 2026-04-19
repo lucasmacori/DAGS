@@ -10,12 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TranslateRouteImport } from './routes/translate'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
+import { Route as ApiGenerateChatRouteImport } from './routes/api/generate-chat'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const TranslateRoute = TranslateRouteImport.update({
   id: '/translate',
   path: '/translate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,34 +36,75 @@ const ApiTranslateRoute = ApiTranslateRouteImport.update({
   path: '/api/translate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateChatRoute = ApiGenerateChatRouteImport.update({
+  id: '/api/generate-chat',
+  path: '/api/generate-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/translate': typeof TranslateRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/translate': typeof TranslateRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRoute
   '/translate': typeof TranslateRoute
+  '/api/chat': typeof ApiChatRoute
+  '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/translate' | '/api/translate'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/translate'
+    | '/api/chat'
+    | '/api/generate-chat'
+    | '/api/translate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/translate' | '/api/translate'
-  id: '__root__' | '/' | '/translate' | '/api/translate'
+  to:
+    | '/'
+    | '/chat'
+    | '/translate'
+    | '/api/chat'
+    | '/api/generate-chat'
+    | '/api/translate'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/translate'
+    | '/api/chat'
+    | '/api/generate-chat'
+    | '/api/translate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRoute
   TranslateRoute: typeof TranslateRoute
+  ApiChatRoute: typeof ApiChatRoute
+  ApiGenerateChatRoute: typeof ApiGenerateChatRoute
   ApiTranslateRoute: typeof ApiTranslateRoute
 }
 
@@ -66,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/translate'
       fullPath: '/translate'
       preLoaderRoute: typeof TranslateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,12 +138,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTranslateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-chat': {
+      id: '/api/generate-chat'
+      path: '/api/generate-chat'
+      fullPath: '/api/generate-chat'
+      preLoaderRoute: typeof ApiGenerateChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRoute,
   TranslateRoute: TranslateRoute,
+  ApiChatRoute: ApiChatRoute,
+  ApiGenerateChatRoute: ApiGenerateChatRoute,
   ApiTranslateRoute: ApiTranslateRoute,
 }
 export const routeTree = rootRouteImport
