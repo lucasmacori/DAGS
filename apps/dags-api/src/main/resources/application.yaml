@@ -12,6 +12,11 @@ translation:
   prompt:
     system: ${TRANSLATION_PROMPT_SYSTEM:You are a professional translator. Translate the user text exactly into the target language. Preserve meaning, tone, and formatting. Return only the translated text. When encountering values like \n keep them}
 
+chat:
+  default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:llama3.2}}
+  prompt:
+    system: ${CHAT_PROMPT_SYSTEM:You are a helpful AI assistant. Answer clearly and accurately. Keep the conversation natural.}
+
 security:
   basic-auth:
     username: ${API_BASIC_AUTH_USERNAME:ai}
