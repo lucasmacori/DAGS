@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
-import { mockChatMessages } from '../lib/workspace-mocks'
+import { getAiToolsApiConfig } from '../lib/ai-tools-api'
+import { useConversations } from '../lib/conversations'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -46,17 +47,93 @@ function extractStreamText(buffer: string) {
 }
 
 export const Route = createFileRoute('/chat')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        let apiBaseUrl: string
+        let authorization: string
+
+        try {
+          const config = getAiToolsApiConfig()
+          apiBaseUrl = config.apiBaseUrl
+          authorization = config.authorization
+        } catch (error) {
+          return new Response(
+            error instanceof Error ? error.message : 'API configuration is invalid.',
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+              },
+            },
+          )
+        }
+
+        const body = (await request.json()) as Partial<{
+          chat_id: string
+          message: string
+          model?: string
+        }>
+
+        const payload = {
+          chat_id: body.chat_id?.trim() ?? '',
+          message: body.message?.trim() ?? '',
+          model: body.model?.trim() || 'gemma4:e2b',
+        }
+
+        if (!payload.chat_id || !payload.message) {
+          return new Response('chat_id and message are required.', {
+            status: 400,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+            },
+          })
+        }
+
+        const upstreamResponse = await fetch(`${apiBaseUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            Authorization: authorization,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        })
+
+        if (!upstreamResponse.ok) {
+          const message = await upstreamResponse.text()
+
+          return new Response(message || 'Could not send chat message.', {
+            status: upstreamResponse.status,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+            },
+          })
+        }
+
+        return new Response(upstreamResponse.body, {
+          status: upstreamResponse.status,
+          headers: {
+            'Cache-Control': 'no-store',
+            'Content-Type':
+              upstreamResponse.headers.get('content-type') ??
+              'text/event-stream; charset=utf-8',
+          },
+        })
+      },
+    },
+  },
   component: ChatPage,
 })
 
 function ChatPage() {
+  const { activeConversation, setActiveConversation, refreshConversations } = useConversations()
   const [message, setMessage] = useState('')
-  const [chatId, setChatId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Array<ChatMessage>>([...mockChatMessages])
+  const [messages, setMessages] = useState<Array<ChatMessage>>([])
   const [isStartingChat, setIsStartingChat] = useState(false)
   const [isSendingMessage, setIsSendingMessage] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const threadRef = useRef<HTMLDivElement | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement | null>(null)
 
   function getTimestamp() {
     return new Intl.DateTimeFormat('en-US', {
@@ -64,6 +141,21 @@ function ChatPage() {
       minute: '2-digit',
     }).format(new Date())
   }
+
+  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Enter' || event.shiftKey) {
+      return
+    }
+
+    event.preventDefault()
+    event.currentTarget.form?.requestSubmit()
+  }
+
+  useEffect(() => {
+    setMessages([])
+    setError(null)
+    composerRef.current?.focus()
+  }, [activeConversation])
 
   useEffect(() => {
     const threadElement = threadRef.current
@@ -93,13 +185,17 @@ function ChatPage() {
     setIsSendingMessage(true)
 
     try {
-      let nextChatId = chatId
+      let nextChatId = activeConversation?.conversationId
 
       if (!nextChatId) {
         setIsStartingChat(true)
 
-        const createChatResponse = await fetch('/api/generate-chat', {
+        const createChatResponse = await fetch('/conversation', {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: 'Conversation' }),
         })
 
         if (!createChatResponse.ok) {
@@ -108,16 +204,23 @@ function ChatPage() {
         }
 
         const createChatPayload = (await createChatResponse.json()) as {
+          conversationId?: string
           chat_id?: string
         }
 
-        nextChatId = createChatPayload.chat_id?.trim() ?? ''
+        nextChatId = (createChatPayload.conversationId || createChatPayload.chat_id)?.trim() ?? ''
 
         if (!nextChatId) {
-          throw new Error('Chat service did not return a chat_id.')
+          throw new Error('Chat service did not return a conversationId.')
         }
 
-        setChatId(nextChatId)
+        const newConv = {
+          conversationId: nextChatId,
+          conversationName: 'Conversation',
+          createdAt: new Date().toISOString()
+        }
+        setActiveConversation(newConv)
+        await refreshConversations()
         setIsStartingChat(false)
       }
 
@@ -127,7 +230,7 @@ function ChatPage() {
       ])
       setMessage('')
 
-      const chatResponse = await fetch('/api/chat', {
+      const chatResponse = await fetch('/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -260,6 +363,8 @@ function ChatPage() {
     }
   }
 
+  const displayTitle = activeConversation?.conversationName || 'Conversation'
+
   return (
     <section className="chat-screen">
       <header className="topbar">
@@ -267,7 +372,7 @@ function ChatPage() {
           <button className="topbar__menu-button" type="button" aria-label="Open menu">
             <span className="material-symbols-outlined">menu</span>
           </button>
-          <h1 className="topbar__title">Scalable Node.js microservice conversation</h1>
+          <h1 className="topbar__title">{displayTitle}</h1>
           <span className="topbar__pill">Gemma4:e2b</span>
         </div>
       </header>
@@ -349,10 +454,12 @@ function ChatPage() {
             </button>
 
             <textarea
+              ref={composerRef}
               className="chat-composer-input"
               aria-label="Chat message"
               placeholder="Message DAGS..."
               value={message}
+              onKeyDown={handleComposerKeyDown}
               onChange={(event) => {
                 setMessage(event.target.value)
               }}
@@ -383,7 +490,7 @@ function ChatPage() {
         </form>
 
         <p className="chat-disclaimer">
-          {error ?? (chatId ? `Chat ID: ${chatId}` : 'DAGS can make mistakes. Verify critical technical information.')}
+          {error ?? (activeConversation?.conversationId ? `Chat ID: ${activeConversation.conversationId}` : 'DAGS can make mistakes. Verify critical technical information.')}
         </p>
       </footer>
     </section>

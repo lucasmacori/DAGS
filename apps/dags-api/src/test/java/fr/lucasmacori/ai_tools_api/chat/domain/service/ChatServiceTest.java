@@ -12,12 +12,15 @@ import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.spi.ChatGenerator;
 import reactor.core.publisher.Flux;
 
+import static org.mockito.Mockito.mock;
+
 class ChatServiceTest {
 
 	@Test
 	void chatUsesDefaultModelWhenRequestModelIsMissing() {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
-		ChatService service = new ChatService(generator, "default-model", "System prompt");
+		fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository repo = mock(fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", repo);
 
 		List<String> response = service.chat(new ChatRequest(UUID.randomUUID().toString(), "Hello", null))
 				.collectList()
@@ -33,7 +36,8 @@ class ChatServiceTest {
 	@Test
 	void chatUsesRequestModelWhenProvided() {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
-		ChatService service = new ChatService(generator, "default-model", "System prompt");
+		fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository repo = mock(fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", repo);
 
 		service.chat(new ChatRequest("chat-1", "Hello", "mistral"))
 				.collectList()

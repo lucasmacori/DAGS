@@ -145,22 +145,24 @@ class ChatControllerTest {
 	@Test
 	void generateChatReturnsUnauthorizedWithoutAuthentication() {
 		webTestClient.post()
-				.uri("/generate-chat")
+				.uri("/conversation")
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
 
 	@Test
 	void generateChatReturnsChatIdAsJson() {
-		UUID chatId = UUID.fromString("930d7b72-4cc0-450d-9f88-a8c3abef3b87");
-		when(applicationService.generateChatId()).thenReturn(chatId);
+		fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation conversation = new fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation("930d7b72-4cc0-450d-9f88-a8c3abef3b87", "test", null);
+		when(applicationService.createConversation(any())).thenReturn(conversation);
 
 		authenticatedClient().post()
-				.uri("/generate-chat")
+				.uri("/conversation")
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue("{\"name\": \"test\"}")
 				.exchange()
 				.expectStatus().isOk()
 				.expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
 				.expectBody()
-				.jsonPath("$.chat_id").isEqualTo(chatId.toString());
+				.jsonPath("$.chat_id").isEqualTo("930d7b72-4cc0-450d-9f88-a8c3abef3b87");
 	}
 }

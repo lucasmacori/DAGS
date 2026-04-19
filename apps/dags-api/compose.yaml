@@ -1,0 +1,10 @@
+services:
+  postgresql:
+    container_name: dags-postgres
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: dags
+      POSTGRES_PASSWORD: dags
+      POSTGRES_DB: dags

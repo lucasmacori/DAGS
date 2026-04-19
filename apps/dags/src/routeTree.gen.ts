@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TranslateRouteImport } from './routes/translate'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as ConversationRouteImport } from './routes/conversation'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
@@ -32,6 +33,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConversationRoute = ConversationRouteImport.update({
+  id: '/conversation',
+  path: '/conversation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -69,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/conversation': typeof ConversationRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/conversation': typeof ConversationRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/conversation': typeof ConversationRoute
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/chat'
+    | '/conversation'
     | '/history'
     | '/settings'
     | '/translate'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/chat'
+    | '/conversation'
     | '/history'
     | '/settings'
     | '/translate'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/'
     | '/archive'
     | '/chat'
+    | '/conversation'
     | '/history'
     | '/settings'
     | '/translate'
@@ -139,6 +151,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
   ChatRoute: typeof ChatRoute
+  ConversationRoute: typeof ConversationRoute
   HistoryRoute: typeof HistoryRoute
   SettingsRoute: typeof SettingsRoute
   TranslateRoute: typeof TranslateRoute
@@ -168,6 +181,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conversation': {
+      id: '/conversation'
+      path: '/conversation'
+      fullPath: '/conversation'
+      preLoaderRoute: typeof ConversationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -219,6 +239,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
   ChatRoute: ChatRoute,
+  ConversationRoute: ConversationRoute,
   HistoryRoute: HistoryRoute,
   SettingsRoute: SettingsRoute,
   TranslateRoute: TranslateRoute,

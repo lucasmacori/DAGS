@@ -2,3 +2,7 @@ spring:
   ai:
     ollama:
       base-url: http://192.168.0.7:11434
+  datasource:
+    url: "jdbc:postgresql://localhost:5432/dags"
+    username: "dags"
+    password: "dags"
