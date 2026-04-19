@@ -1,0 +1,235 @@
+$sidebar-width: 240px;
+$sidebar-background: #171a21;
+$sidebar-muted: #97a1b1;
+$sidebar-text: #f5f7fb;
+$sidebar-active: #2d6cdf;
+$page-background: #f4f6f9;
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1d2433;
+  background: $page-background;
+}
+
+a {
+  color: inherit;
+}
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: $sidebar-width;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 1rem;
+  background: $sidebar-background;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar__brand {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $sidebar-text;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.75rem;
+  color: $sidebar-muted;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.sidebar__link:hover,
+.sidebar__link--active {
+  color: $sidebar-text;
+  background: rgba($sidebar-active, 0.2);
+}
+
+.app-content {
+  flex: 1;
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.translate-page {
+  width: min(960px, 100%);
+}
+
+.translate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.translate-form__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.translate-form__error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.95rem;
+}
+
+.translate-form__languages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.language-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.language-select__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.language-select__box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #cfd6e0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.language-select__search,
+.language-select__control {
+  width: 100%;
+  border: 1px solid #cfd6e0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #1d2433;
+  font: inherit;
+}
+
+.language-select__search {
+  min-height: 2.75rem;
+  padding: 0.75rem 0.875rem;
+}
+
+.language-select__control {
+  padding: 0.25rem;
+}
+
+.language-select__control option {
+  padding: 0.625rem 0.75rem;
+}
+
+.language-select__search:focus,
+.language-select__control:focus {
+  outline: 2px solid rgba($sidebar-active, 0.2);
+  outline-offset: 1px;
+  border-color: $sidebar-active;
+}
+
+.translate-form__textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 1rem;
+  border: 1px solid #cfd6e0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #1d2433;
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.translate-form__textarea:focus {
+  outline: 2px solid rgba($sidebar-active, 0.2);
+  outline-offset: 1px;
+  border-color: $sidebar-active;
+}
+
+.translate-form__textarea--output {
+  background: #eef2f7;
+}
+
+.translate-form__button {
+  align-self: flex-start;
+  min-width: 140px;
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: $sidebar-active;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.translate-form__button:hover {
+  background: #1f5bc4;
+}
+
+.translate-form__button:disabled {
+  background: #8ca9e8;
+  cursor: wait;
+}
+
+.translate-form__button:focus-visible {
+  outline: 2px solid rgba($sidebar-active, 0.25);
+  outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .app-content {
+    padding: 1rem;
+  }
+
+  .translate-form__textarea {
+    min-height: 180px;
+  }
+
+  .translate-form__languages {
+    grid-template-columns: 1fr;
+  }
+
+  .translate-form__button {
+    width: 100%;
+  }
+}
