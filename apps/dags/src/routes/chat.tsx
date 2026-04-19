@@ -1,63 +1,19 @@
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
+import { ChatComposer } from '../components/chat/ChatComposer'
+import { ChatThread } from '../components/chat/ChatThread'
+import { Topbar } from '../components/layout/Topbar'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 import { useConversations } from '../lib/conversations'
-
-type ChatMessage = {
-  role: 'user' | 'assistant'
-  text: string
-  timestamp: string
-  id?: string
-  title?: string
-  trailingText?: string
-  codeTitle?: string
-  code?: string
-}
-
-type ConversationHistoryResponse = {
-  page: number
-  size: number
-  messages: Array<{
-    message_id: string
-    conversation_id: string
-    role: 'USER' | 'ASSISTANT'
-    content: string
-    created_at: string
-  }>
-}
+import {
+  extractStreamText,
+  mapConversationHistoryMessages,
+  type ChatMessage,
+  type ConversationHistoryResponse,
+} from '../lib/chat-utils'
 
 const chatModel = 'gemma4:e2b'
-
-function extractStreamText(buffer: string) {
-  const normalizedBuffer = buffer.replace(/\r\n/g, '\n')
-  const events = normalizedBuffer.split('\n\n')
-  const trailingLine = events.pop() ?? ''
-  let extractedText = ''
-
-  for (const event of events) {
-    const lines = event.split('\n')
-    const dataLines: string[] = []
-
-    for (const line of lines) {
-      if (line.startsWith('data:')) {
-        const value = line.slice(5)
-        if (value !== '[DONE]') {
-          dataLines.push(value)
-        }
-      }
-    }
-
-    if (dataLines.length > 0) {
-      extractedText += dataLines.join('\n')
-    }
-  }
-
-  return {
-    extractedText,
-    trailingLine,
-  }
-}
 
 export const Route = createFileRoute('/chat')({
   server: {
@@ -156,40 +112,6 @@ function ChatPage() {
     }).format(new Date())
   }
 
-  function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key !== 'Enter' || event.shiftKey) {
-      return
-    }
-
-    event.preventDefault()
-    event.currentTarget.form?.requestSubmit()
-  }
-
-  function formatTimestamp(value: string) {
-    const date = new Date(value)
-
-    if (Number.isNaN(date.getTime())) {
-      return value
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }).format(date)
-  }
-
-  function mapHistoryMessages(payload: ConversationHistoryResponse): Array<ChatMessage> {
-    return [...payload.messages]
-      .reverse()
-      .map((item) => ({
-        id: item.message_id,
-        role: item.role === 'ASSISTANT' ? 'assistant' : 'user',
-        text: item.content,
-        timestamp: formatTimestamp(item.created_at),
-        title: item.role === 'ASSISTANT' ? 'DAGS AI' : undefined,
-      }))
-  }
-
   useEffect(() => {
     let isCancelled = false
 
@@ -218,7 +140,7 @@ function ChatPage() {
         const payload = (await response.json()) as ConversationHistoryResponse
 
         if (!isCancelled) {
-          setMessages(mapHistoryMessages(payload))
+          setMessages(mapConversationHistoryMessages(payload))
         }
       } catch (caughtError) {
         if (!isCancelled) {
@@ -453,249 +375,27 @@ function ChatPage() {
 
   return (
     <section className="chat-screen">
-      <header className="topbar">
-        <div className="topbar__title-group">
-          <button className="topbar__menu-button" type="button" aria-label="Open menu">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <h1 className="topbar__title">{displayTitle}</h1>
-          <span className="topbar__pill">Gemma4:e2b</span>
-        </div>
-      </header>
+      <Topbar title={displayTitle} pill="Gemma4:e2b" />
 
-      <div ref={threadRef} className="chat-thread" aria-label="Chat messages">
-        {isLoadingHistory ? (
-          <ConversationHistorySkeleton />
-        ) : null}
+      <ChatThread
+        isLoadingHistory={isLoadingHistory}
+        isSendingMessage={isSendingMessage}
+        messages={messages}
+        threadRef={threadRef}
+      />
 
-        {messages.map((messageItem, index) => (
-          <article
-            key={messageItem.id ?? `${messageItem.role}-${index}`}
-            className={`chat-row chat-row--${messageItem.role}`}
-          >
-            {messageItem.role === 'assistant' ? (
-              <div className="chat-assistant-block">
-                <div className="chat-assistant-label">
-                  <span className="chat-assistant-badge material-symbols-outlined">smart_toy</span>
-                  <span>{messageItem.title}</span>
-                </div>
+      <ChatComposer
+        composerRef={composerRef}
+        disabled={isStartingChat || isSendingMessage}
+        message={message}
+        model={chatModel}
+        onChange={setMessage}
+        onSubmit={handleSubmit}
+      />
 
-                <div className="chat-assistant-bubble">
-                  {parseMessageContent(messageItem.text).map((block, i) =>
-                    block.type === 'text' ? (
-                      <p key={i} className="chat-bubble__text">
-                        {block.content}
-                      </p>
-                    ) : (
-                      <CodeCard key={i} title={block.language} code={block.content} />
-                    )
-                  )}
-
-                  {messageItem.code ? (
-                    <CodeCard title={messageItem.codeTitle || 'Code'} code={messageItem.code} />
-                  ) : null}
-
-                  {messageItem.trailingText ? (
-                    <p className="chat-bubble__text">{messageItem.trailingText}</p>
-                  ) : null}
-                </div>
-
-                <div className="chat-assistant-meta">
-                  <span>{messageItem.timestamp}</span>
-                  <div className="chat-assistant-actions">
-                    <span className="material-symbols-outlined">thumb_up</span>
-                    <span className="material-symbols-outlined">thumb_down</span>
-                    <span className="material-symbols-outlined">refresh</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="chat-user-block">
-                <div className="chat-user-bubble">
-                  <p className="chat-bubble__text">{messageItem.text}</p>
-                </div>
-                <span className="chat-user-time">{messageItem.timestamp}</span>
-              </div>
-            )}
-          </article>
-        ))}
-
-        {isSendingMessage && messages.at(-1)?.role === 'user' ? (
-          <article className="chat-row chat-row--assistant">
-            <div className="chat-assistant-block">
-              <div className="chat-assistant-label">
-                <span className="chat-assistant-badge material-symbols-outlined">smart_toy</span>
-                <span>DAGS AI</span>
-              </div>
-
-              <div className="chat-assistant-bubble chat-assistant-bubble--thinking">
-                <p className="chat-bubble__text">Processing your message...</p>
-              </div>
-            </div>
-          </article>
-        ) : null}
-      </div>
-
-      <footer className="chat-composer-shell">
-        <form className="chat-composer-panel" onSubmit={handleSubmit}>
-          <div className="chat-composer-main">
-            <button className="icon-button" type="button" aria-label="Add attachment">
-              <span className="material-symbols-outlined">add_circle</span>
-            </button>
-
-            <textarea
-              ref={composerRef}
-              className="chat-composer-input"
-              aria-label="Chat message"
-              placeholder="Message DAGS..."
-              value={message}
-              onKeyDown={handleComposerKeyDown}
-              onChange={(event) => {
-                setMessage(event.target.value)
-              }}
-            />
-
-            <div className="chat-composer-actions">
-              <button className="icon-button" type="button" aria-label="Use microphone">
-                <span className="material-symbols-outlined">mic</span>
-              </button>
-              <button
-                className="send-button"
-                type="submit"
-                aria-label="Send message"
-                disabled={isStartingChat || isSendingMessage}
-              >
-                <span className="material-symbols-outlined">send</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="chat-composer-meta">
-            <div className="chat-composer-model">
-              <span className="material-symbols-outlined">auto_awesome</span>
-              <span>{chatModel}</span>
-            </div>
-            <span>DAGS v4.2.0-stable</span>
-          </div>
-        </form>
-
-        <p className="chat-disclaimer">
-          {error ?? (activeConversation?.conversationId ? `Chat ID: ${activeConversation.conversationId}` : 'DAGS can make mistakes. Verify critical technical information.')}
-        </p>
-      </footer>
+      <p className="chat-disclaimer">
+        {error ?? (activeConversation?.conversationId ? `Chat ID: ${activeConversation.conversationId}` : 'DAGS can make mistakes. Verify critical technical information.')}
+      </p>
     </section>
-  )
-}
-
-type ParsedBlock =
-  | { type: 'text'; content: string }
-  | { type: 'code'; language: string; content: string }
-
-function parseMessageContent(text: string): ParsedBlock[] {
-  const blocks: ParsedBlock[] = []
-  const codeBlockRegex = /```([\w-]*)\n([\s\S]*?)(```|$)/g
-  let lastIndex = 0
-  let match
-
-  while ((match = codeBlockRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      blocks.push({
-        type: 'text',
-        content: text.slice(lastIndex, match.index),
-      })
-    }
-
-    blocks.push({
-      type: 'code',
-      language: match[1] || 'Code',
-      content: match[2].trim(),
-    })
-
-    lastIndex = match.index + match[0].length
-  }
-
-  if (lastIndex < text.length) {
-    blocks.push({
-      type: 'text',
-      content: text.slice(lastIndex),
-    })
-  }
-
-  return blocks
-}
-
-function CodeCard({ code, title }: { code: string; title: string }) {
-  const [copied, setCopied] = useState(false)
-
-  function handleCopy() {
-    navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => {
-      setCopied(false)
-    }, 2000)
-  }
-
-  return (
-    <section className="chat-code-card">
-      <header className="chat-code-card__header">
-        <span>{title || 'Code'}</span>
-        <button
-          className="icon-button"
-          type="button"
-          aria-label="Copy code"
-          onClick={handleCopy}
-        >
-          <span className="material-symbols-outlined">
-            {copied ? 'check' : 'content_copy'}
-          </span>
-        </button>
-      </header>
-      <pre className="chat-code-card__body">{code}</pre>
-    </section>
-  )
-}
-
-function ConversationHistorySkeleton() {
-  return (
-    <>
-      <article className="chat-row chat-row--assistant" aria-hidden="true">
-        <div className="chat-assistant-block chat-skeleton-block">
-          <div className="chat-assistant-label chat-skeleton-label">
-            <span className="chat-assistant-badge chat-skeleton-badge" />
-            <span className="chat-skeleton-line chat-skeleton-line--label" />
-          </div>
-
-          <div className="chat-assistant-bubble chat-skeleton-bubble">
-            <span className="chat-skeleton-line chat-skeleton-line--wide" />
-            <span className="chat-skeleton-line chat-skeleton-line--medium" />
-            <span className="chat-skeleton-line chat-skeleton-line--narrow" />
-          </div>
-        </div>
-      </article>
-
-      <article className="chat-row chat-row--user" aria-hidden="true">
-        <div className="chat-user-block chat-skeleton-block">
-          <div className="chat-user-bubble chat-skeleton-bubble chat-skeleton-bubble--user">
-            <span className="chat-skeleton-line chat-skeleton-line--medium" />
-            <span className="chat-skeleton-line chat-skeleton-line--short" />
-          </div>
-        </div>
-      </article>
-
-      <article className="chat-row chat-row--assistant" aria-hidden="true">
-        <div className="chat-assistant-block chat-skeleton-block">
-          <div className="chat-assistant-label chat-skeleton-label">
-            <span className="chat-assistant-badge chat-skeleton-badge" />
-            <span className="chat-skeleton-line chat-skeleton-line--label" />
-          </div>
-
-          <div className="chat-assistant-bubble chat-skeleton-bubble">
-            <span className="chat-skeleton-line chat-skeleton-line--wide" />
-            <span className="chat-skeleton-line chat-skeleton-line--wide" />
-            <span className="chat-skeleton-line chat-skeleton-line--short" />
-          </div>
-        </div>
-      </article>
-    </>
   )
 }

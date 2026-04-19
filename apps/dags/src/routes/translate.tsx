@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 
+import { Topbar } from '../components/layout/Topbar'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 
 type LanguageOption = {
@@ -265,11 +266,7 @@ function TranslatePage() {
 
   return (
     <section className="translate-screen">
-      <header className="topbar">
-        <div className="topbar__title-group">
-          <h1 className="topbar__title">Translate</h1>
-        </div>
-      </header>
+      <Topbar title="Translate" />
 
       <form className="translate-canvas" onSubmit={handleSubmit}>
         <div className="translate-controls-row">

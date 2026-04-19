@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { Topbar } from '../components/layout/Topbar'
 import {
   appearanceOptions,
   settingsApiKeys,
@@ -14,20 +15,19 @@ export const Route = createFileRoute('/settings')({
 function SettingsPage() {
   return (
     <section className="settings-screen">
-      <header className="topbar">
-        <div className="topbar__title-group">
-          <h1 className="topbar__title">Settings</h1>
-        </div>
-
-        <div className="topbar__actions">
-          <button className="icon-button icon-button--topbar" type="button" aria-label="Notifications">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="icon-button icon-button--topbar" type="button" aria-label="Help">
-            <span className="material-symbols-outlined">help</span>
-          </button>
-        </div>
-      </header>
+      <Topbar
+        title="Settings"
+        actions={
+          <>
+            <button className="icon-button icon-button--topbar" type="button" aria-label="Notifications">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <button className="icon-button icon-button--topbar" type="button" aria-label="Help">
+              <span className="material-symbols-outlined">help</span>
+            </button>
+          </>
+        }
+      />
 
       <div className="settings-content">
         <section className="settings-section-grid">
