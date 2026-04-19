@@ -1,0 +1,50 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "dags-api",
+  "projectType": "application",
+  "root": "apps/dags-api",
+  "sourceRoot": "apps/dags-api/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags-api",
+        "command": "./gradlew bootRun"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags-api",
+        "command": "./gradlew build"
+      },
+      "outputs": [
+        "{projectRoot}/build"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags-api",
+        "command": "./gradlew test"
+      },
+      "outputs": [
+        "{projectRoot}/build/test-results",
+        "{projectRoot}/build/reports/tests"
+      ]
+    },
+    "nativeCompile": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags-api",
+        "command": "./gradlew nativeCompile"
+      },
+      "outputs": [
+        "{projectRoot}/build/native"
+      ]
+    }
+  },
+  "tags": [
+    "scope:api"
+  ]
+}

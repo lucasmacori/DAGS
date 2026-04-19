@@ -1,0 +1,24 @@
+{
+  "name": "dags",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "scripts": {
+    "nx": "nx",
+    "dev": "pnpm nx run dags:serve",
+    "dev:ui": "pnpm nx run dags:serve",
+    "dev:api": "pnpm nx run dags-api:serve",
+    "build": "pnpm nx run-many -t build",
+    "test": "pnpm nx run-many -t test"
+  },
+  "devDependencies": {
+    "nx": "22.6.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "lightningcss",
+      "nx"
+    ]
+  }
+}

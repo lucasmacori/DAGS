@@ -1,0 +1,49 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "dags",
+  "projectType": "application",
+  "root": "apps/dags",
+  "sourceRoot": "apps/dags/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags",
+        "command": "pnpm dev"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags",
+        "command": "pnpm build"
+      },
+      "outputs": [
+        "{projectRoot}/.output"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags",
+        "command": "pnpm test"
+      },
+      "dependsOn": [
+        "^test"
+      ]
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/dags",
+        "command": "pnpm preview"
+      }
+    }
+  },
+  "tags": [
+    "scope:ui"
+  ]
+}

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ai-tools-api
+    name: dags-api
   ai:
     ollama:
       base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
