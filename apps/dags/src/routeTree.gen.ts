@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TranslateRouteImport } from './routes/translate'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiGenerateChatRouteImport } from './routes/api/generate-chat'
@@ -21,9 +24,24 @@ const TranslateRoute = TranslateRouteImport.update({
   path: '/translate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryRoute = HistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchiveRoute = ArchiveRouteImport.update({
+  id: '/archive',
+  path: '/archive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,7 +67,10 @@ const ApiChatRoute = ApiChatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
@@ -57,7 +78,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
@@ -66,7 +90,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/archive': typeof ArchiveRoute
   '/chat': typeof ChatRoute
+  '/history': typeof HistoryRoute
+  '/settings': typeof SettingsRoute
   '/translate': typeof TranslateRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
@@ -76,7 +103,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/archive'
     | '/chat'
+    | '/history'
+    | '/settings'
     | '/translate'
     | '/api/chat'
     | '/api/generate-chat'
@@ -84,7 +114,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/archive'
     | '/chat'
+    | '/history'
+    | '/settings'
     | '/translate'
     | '/api/chat'
     | '/api/generate-chat'
@@ -92,7 +125,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/archive'
     | '/chat'
+    | '/history'
+    | '/settings'
     | '/translate'
     | '/api/chat'
     | '/api/generate-chat'
@@ -101,7 +137,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchiveRoute: typeof ArchiveRoute
   ChatRoute: typeof ChatRoute
+  HistoryRoute: typeof HistoryRoute
+  SettingsRoute: typeof SettingsRoute
   TranslateRoute: typeof TranslateRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateChatRoute: typeof ApiGenerateChatRoute
@@ -117,11 +156,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TranslateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history': {
+      id: '/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/archive': {
+      id: '/archive'
+      path: '/archive'
+      fullPath: '/archive'
+      preLoaderRoute: typeof ArchiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -157,7 +217,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchiveRoute: ArchiveRoute,
   ChatRoute: ChatRoute,
+  HistoryRoute: HistoryRoute,
+  SettingsRoute: SettingsRoute,
   TranslateRoute: TranslateRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateChatRoute: ApiGenerateChatRoute,

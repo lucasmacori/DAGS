@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 type LanguageOption = {
@@ -61,6 +61,17 @@ function TranslatePage() {
   const [translatedText, setTranslatedText] = useState('')
   const [isTranslating, setIsTranslating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  function handleSwapLanguages() {
+    if (sourceLanguage === 'auto') {
+      return
+    }
+
+    setSourceLanguage(targetLanguage)
+    setTargetLanguage(sourceLanguage)
+    setSourceText(translatedText || sourceText)
+    setTranslatedText(sourceText)
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -158,124 +169,123 @@ function TranslatePage() {
   }
 
   return (
-    <section className="translate-page">
-      <form className="translate-form" onSubmit={handleSubmit}>
-        <div className="translate-form__languages">
-          <SearchableSelect
-            label="Base language"
-            name="sourceLanguage"
-            options={languageOptions}
-            value={sourceLanguage}
-            onChange={setSourceLanguage}
-          />
-
-          <SearchableSelect
-            label="Target language"
-            name="targetLanguage"
-            options={languageOptions}
-            value={targetLanguage}
-            onChange={setTargetLanguage}
-          />
+    <section className="translate-screen">
+      <header className="topbar">
+        <div className="topbar__title-group">
+          <h1 className="topbar__title topbar__title--simple">Translate</h1>
         </div>
+      </header>
 
-        <textarea
-          className="translate-form__textarea"
-          name="sourceText"
-          aria-label="Text to translate"
-          placeholder="Enter text to translate"
-          value={sourceText}
-          onChange={(event) => {
-            setSourceText(event.target.value)
-          }}
-        />
+      <form className="translate-canvas" onSubmit={handleSubmit}>
+        <div className="translate-controls-row">
+          <label className="translate-language-chip">
+            <div className="translate-language-chip__main">
+              <span className="material-symbols-outlined">language</span>
+              <select
+                className="translate-language-chip__select"
+                value={sourceLanguage}
+                onChange={(event) => {
+                  setSourceLanguage(event.target.value)
+                }}
+              >
+                {languageOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="translate-language-chip__label">Source</span>
+          </label>
 
-        <div className="translate-form__actions">
           <button
-            className="translate-form__button"
-            type="submit"
-            disabled={isTranslating}
+            className="translate-swap-button"
+            type="button"
+            aria-label="Swap languages"
+            onClick={handleSwapLanguages}
+            disabled={sourceLanguage === 'auto'}
           >
-            {isTranslating ? 'Translating...' : 'Translate'}
+            <span className="material-symbols-outlined">swap_horiz</span>
           </button>
 
-          {error ? <p className="translate-form__error">{error}</p> : null}
+          <label className="translate-language-chip translate-language-chip--target">
+            <div className="translate-language-chip__main">
+              <span className="material-symbols-outlined">translate</span>
+              <select
+                className="translate-language-chip__select"
+                value={targetLanguage}
+                onChange={(event) => {
+                  setTargetLanguage(event.target.value)
+                }}
+              >
+                {languageOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <span className="translate-language-chip__label">Target</span>
+          </label>
         </div>
 
-        <textarea
-          className="translate-form__textarea translate-form__textarea--output"
-          name="translatedText"
-          aria-label="Translated text"
-          placeholder="Translation will appear here"
-          value={translatedText}
-          readOnly
-        />
+        <div className="translate-panels">
+          <section className="translate-editor translate-editor--source">
+            <textarea
+              className="translate-editor__input"
+              name="sourceText"
+              aria-label="Text to translate"
+              placeholder="Type or paste content to translate..."
+              value={sourceText}
+              onChange={(event) => {
+                setSourceText(event.target.value)
+              }}
+            />
+
+            <footer className="translate-editor__footer">
+              <div className="translate-editor__tools">
+                <button className="icon-button" type="button" aria-label="Use microphone">
+                  <span className="material-symbols-outlined">mic</span>
+                </button>
+                <button className="icon-button" type="button" aria-label="Read source text">
+                  <span className="material-symbols-outlined">volume_up</span>
+                </button>
+              </div>
+
+              <span className="translate-editor__counter">{sourceText.length} / 5000</span>
+            </footer>
+          </section>
+
+          <section className="translate-editor translate-editor--output">
+            <div className="translate-editor__output">
+              {translatedText}
+            </div>
+
+            <footer className="translate-editor__footer translate-editor__footer--output">
+              <div className="translate-editor__tools">
+                <button className="icon-button" type="button" aria-label="Read translated text">
+                  <span className="material-symbols-outlined">volume_up</span>
+                </button>
+                <button className="icon-button" type="button" aria-label="Favorite translation">
+                  <span className="material-symbols-outlined">star</span>
+                </button>
+              </div>
+
+              <div className="translate-output-actions">
+                <button className="translate-copy-button" type="button">
+                  <span className="material-symbols-outlined">content_copy</span>
+                  Copy
+                </button>
+                <button className="translate-submit-button" type="submit" disabled={isTranslating}>
+                  {isTranslating ? 'Translating...' : 'Translate Now'}
+                </button>
+              </div>
+            </footer>
+          </section>
+        </div>
+
+        {error ? <p className="translate-error-banner">{error}</p> : null}
       </form>
     </section>
-  )
-}
-
-function SearchableSelect({
-  label,
-  name,
-  options,
-  value,
-  onChange,
-}: {
-  label: string
-  name: string
-  options: Array<LanguageOption>
-  value: string
-  onChange: (value: string) => void
-}) {
-  const [query, setQuery] = useState('')
-
-  const filteredOptions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
-
-    if (!normalizedQuery) {
-      return options
-    }
-
-    return options.filter((option) => {
-      return (
-        option.label.toLowerCase().includes(normalizedQuery) ||
-        option.value.toLowerCase().includes(normalizedQuery)
-      )
-    })
-  }, [options, query])
-
-  return (
-    <label className="language-select">
-      <span className="language-select__label">{label}</span>
-      <input type="hidden" name={name} value={value} />
-
-      <div className="language-select__box">
-        <input
-          className="language-select__search"
-          type="search"
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value)
-          }}
-          placeholder="Search language"
-          aria-label={`${label} search`}
-        />
-
-        <select
-          className="language-select__control"
-          value={value}
-          onChange={(event) => {
-            onChange(event.target.value)
-          }}
-          aria-label={label}
-        >
-          {filteredOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </label>
   )
 }

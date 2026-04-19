@@ -26,9 +26,8 @@ class ChatServiceTest {
 		assertEquals(List.of("Hi"), response);
 		assertEquals("default-model", generator.model);
 		assertEquals("System prompt", generator.systemPrompt);
-		assertTrue(generator.userPrompt.contains("Chat ID: "));
-		assertTrue(generator.userPrompt.contains("User message:"));
-		assertTrue(generator.userPrompt.contains("Hello"));
+		assertTrue(generator.chatId != null && !generator.chatId.isBlank());
+		assertEquals("Hello", generator.userMessage);
 	}
 
 	@Test
@@ -40,19 +39,23 @@ class ChatServiceTest {
 				.collectList()
 				.block();
 
+		assertEquals("chat-1", generator.chatId);
+		assertEquals("Hello", generator.userMessage);
 		assertEquals("mistral", generator.model);
 	}
 
 	private static final class CapturingChatGenerator implements ChatGenerator {
 
+		private String chatId;
 		private String systemPrompt;
-		private String userPrompt;
+		private String userMessage;
 		private String model;
 
 		@Override
-		public Flux<String> stream(String systemPrompt, String userPrompt, String model) {
+		public Flux<String> stream(String chatId, String systemPrompt, String userMessage, String model) {
+			this.chatId = chatId;
 			this.systemPrompt = systemPrompt;
-			this.userPrompt = userPrompt;
+			this.userMessage = userMessage;
 			this.model = model;
 			return Flux.just("Hi");
 		}

@@ -14,7 +14,7 @@ class ChatApplicationServiceTest {
 
 	@Test
 	void chatDelegatesToDomainService() {
-		ChatGenerator generator = (systemPrompt, userPrompt, model) -> Flux.just("Hello there");
+		ChatGenerator generator = (chatId, systemPrompt, userMessage, model) -> Flux.just("Hello there");
 		ChatApplicationService applicationService = new ChatApplicationService(new ChatService(generator, "default-model", "System prompt"));
 
 		String response = applicationService.chat(new ChatRequestBody("chat-1", "Hello", null))
@@ -27,7 +27,7 @@ class ChatApplicationServiceTest {
 
 	@Test
 	void generateChatIdReturnsUuid() {
-		ChatGenerator generator = (systemPrompt, userPrompt, model) -> Flux.just("Hello there");
+		ChatGenerator generator = (chatId, systemPrompt, userMessage, model) -> Flux.just("Hello there");
 		ChatApplicationService applicationService = new ChatApplicationService(new ChatService(generator, "default-model", "System prompt"));
 
 		assertNotNull(applicationService.generateChatId());

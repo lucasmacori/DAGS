@@ -23,22 +23,11 @@ public class ChatService {
 	}
 
 	public Flux<String> chat(ChatRequest request, String systemPrompt) {
-		return chatGenerator.stream(systemPrompt, buildUserPrompt(request), resolveModel(request));
+		return chatGenerator.stream(request.chatId(), systemPrompt, request.message(), resolveModel(request));
 	}
 
 	public UUID generateChatId() {
 		return UUID.randomUUID();
-	}
-
-	private String buildUserPrompt(ChatRequest request) {
-		return """
-				Chat ID: %s
-
-				The user sent the following message. Reply to it directly.
-
-				User message:
-				%s
-				""".formatted(request.chatId(), request.message());
 	}
 
 	private String resolveModel(ChatRequest request) {

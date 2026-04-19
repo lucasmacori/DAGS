@@ -1,9 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+
+import { mockChatMessages } from '../lib/workspace-mocks'
 
 type ChatMessage = {
   role: 'user' | 'assistant'
   text: string
+  timestamp: string
+  title?: string
+  trailingText?: string
+  codeTitle?: string
+  code?: string
 }
 
 const chatModel = 'gemma4:e2b'
@@ -41,10 +48,28 @@ export const Route = createFileRoute('/chat')({
 function ChatPage() {
   const [message, setMessage] = useState('')
   const [chatId, setChatId] = useState<string | null>(null)
-  const [messages, setMessages] = useState<Array<ChatMessage>>([])
+  const [messages, setMessages] = useState<Array<ChatMessage>>([...mockChatMessages])
   const [isStartingChat, setIsStartingChat] = useState(false)
   const [isSendingMessage, setIsSendingMessage] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const threadRef = useRef<HTMLDivElement | null>(null)
+
+  function getTimestamp() {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date())
+  }
+
+  useEffect(() => {
+    const threadElement = threadRef.current
+
+    if (!threadElement) {
+      return
+    }
+
+    threadElement.scrollTop = threadElement.scrollHeight
+  }, [messages, isSendingMessage])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -94,7 +119,7 @@ function ChatPage() {
 
       setMessages((currentMessages) => [
         ...currentMessages,
-        { role: 'user', text: nextMessage },
+        { role: 'user', text: nextMessage, timestamp: getTimestamp() },
       ])
       setMessage('')
 
@@ -118,7 +143,7 @@ function ChatPage() {
       if (!chatResponse.body) {
         setMessages((currentMessages) => [
           ...currentMessages,
-          { role: 'assistant', text: '' },
+          { role: 'assistant', title: 'DAGS AI', text: '', timestamp: getTimestamp() },
         ])
         return
       }
@@ -157,7 +182,12 @@ function ChatPage() {
           hasAddedAssistantMessage = true
           setMessages((currentMessages) => [
             ...currentMessages,
-            { role: 'assistant', text: assistantText },
+            {
+              role: 'assistant',
+              title: 'DAGS AI',
+              text: assistantText,
+              timestamp: getTimestamp(),
+            },
           ])
           continue
         }
@@ -169,7 +199,9 @@ function ChatPage() {
           if (lastMessage?.role === 'assistant') {
             nextMessages[nextMessages.length - 1] = {
               role: 'assistant',
+              title: 'DAGS AI',
               text: assistantText,
+              timestamp: lastMessage.timestamp,
             }
           }
 
@@ -188,7 +220,12 @@ function ChatPage() {
       if (!hasAddedAssistantMessage) {
         setMessages((currentMessages) => [
           ...currentMessages,
-          { role: 'assistant', text: assistantText },
+          {
+            role: 'assistant',
+            title: 'DAGS AI',
+            text: assistantText,
+            timestamp: getTimestamp(),
+          },
         ])
       } else if (finalText) {
         setMessages((currentMessages) => {
@@ -198,7 +235,9 @@ function ChatPage() {
           if (lastMessage?.role === 'assistant') {
             nextMessages[nextMessages.length - 1] = {
               role: 'assistant',
+              title: 'DAGS AI',
               text: assistantText,
+              timestamp: lastMessage.timestamp,
             }
           }
 
@@ -218,76 +257,129 @@ function ChatPage() {
   }
 
   return (
-    <section className="chat-page">
-      <div className="chat-panel">
-        <header className="chat-panel__header">
-          <div>
-            <p className="chat-panel__eyebrow">Chat</p>
-            <h1 className="chat-panel__title">Chatbot interface</h1>
-            <p className="chat-panel__meta">Model: {chatModel}</p>
+    <section className="chat-screen">
+      <header className="topbar">
+        <div className="topbar__title-group">
+          <button className="topbar__menu-button" type="button" aria-label="Open menu">
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+          <h1 className="topbar__title">Scalable Node.js microservice conversation</h1>
+          <span className="topbar__pill">Gemma4:e2b</span>
+        </div>
+      </header>
+
+      <div ref={threadRef} className="chat-thread" aria-label="Chat messages">
+        {messages.map((messageItem, index) => (
+          <article
+            key={`${messageItem.role}-${index}`}
+            className={`chat-row chat-row--${messageItem.role}`}
+          >
+            {messageItem.role === 'assistant' ? (
+              <div className="chat-assistant-block">
+                <div className="chat-assistant-label">
+                  <span className="chat-assistant-badge material-symbols-outlined">smart_toy</span>
+                  <span>{messageItem.title}</span>
+                </div>
+
+                <div className="chat-assistant-bubble">
+                  <p className="chat-bubble__text">{messageItem.text}</p>
+
+                  {messageItem.code ? (
+                    <section className="chat-code-card">
+                      <header className="chat-code-card__header">
+                        <span>{messageItem.codeTitle}</span>
+                        <span className="material-symbols-outlined">content_copy</span>
+                      </header>
+                      <pre className="chat-code-card__body">{messageItem.code}</pre>
+                    </section>
+                  ) : null}
+
+                  {messageItem.trailingText ? (
+                    <p className="chat-bubble__text">{messageItem.trailingText}</p>
+                  ) : null}
+                </div>
+
+                <div className="chat-assistant-meta">
+                  <span>{messageItem.timestamp}</span>
+                  <div className="chat-assistant-actions">
+                    <span className="material-symbols-outlined">thumb_up</span>
+                    <span className="material-symbols-outlined">thumb_down</span>
+                    <span className="material-symbols-outlined">refresh</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="chat-user-block">
+                <div className="chat-user-bubble">
+                  <p className="chat-bubble__text">{messageItem.text}</p>
+                </div>
+                <span className="chat-user-time">{messageItem.timestamp}</span>
+              </div>
+            )}
+          </article>
+        ))}
+
+        {isSendingMessage ? (
+          <article className="chat-row chat-row--assistant">
+            <div className="chat-assistant-block">
+              <div className="chat-assistant-label">
+                <span className="chat-assistant-badge material-symbols-outlined">smart_toy</span>
+                <span>DAGS AI</span>
+              </div>
+
+              <div className="chat-assistant-bubble chat-assistant-bubble--thinking">
+                <p className="chat-bubble__text">Processing your message...</p>
+              </div>
+            </div>
+          </article>
+        ) : null}
+      </div>
+
+      <footer className="chat-composer-shell">
+        <form className="chat-composer-panel" onSubmit={handleSubmit}>
+          <div className="chat-composer-main">
+            <button className="icon-button" type="button" aria-label="Add attachment">
+              <span className="material-symbols-outlined">add_circle</span>
+            </button>
+
+            <textarea
+              className="chat-composer-input"
+              aria-label="Chat message"
+              placeholder="Message DAGS..."
+              value={message}
+              onChange={(event) => {
+                setMessage(event.target.value)
+              }}
+            />
+
+            <div className="chat-composer-actions">
+              <button className="icon-button" type="button" aria-label="Use microphone">
+                <span className="material-symbols-outlined">mic</span>
+              </button>
+              <button
+                className="send-button"
+                type="submit"
+                aria-label="Send message"
+                disabled={isStartingChat || isSendingMessage}
+              >
+                <span className="material-symbols-outlined">send</span>
+              </button>
+            </div>
           </div>
 
-          <p className="chat-panel__subtitle">
-            A simple conversation workspace for your AI applications.
-          </p>
-        </header>
-
-        <div className="chat-messages" aria-label="Chat messages">
-          {messages.length === 0 ? (
-            <div className="chat-empty-state">
-              <p className="chat-empty-state__title">Start a new conversation</p>
-              <p className="chat-empty-state__text">
-                Send a message to create a chat and begin streaming replies from
-                your AI application.
-              </p>
+          <div className="chat-composer-meta">
+            <div className="chat-composer-model">
+              <span className="material-symbols-outlined">auto_awesome</span>
+              <span>{chatModel}</span>
             </div>
-          ) : (
-            messages.map((messageItem, index) => (
-              <article
-                key={`${messageItem.role}-${index}`}
-                className={`chat-message chat-message--${messageItem.role}`}
-              >
-                <p className="chat-message__role">{messageItem.role}</p>
-                <p className="chat-message__text">{messageItem.text}</p>
-              </article>
-            ))
-          )}
-        </div>
-
-        <form className="chat-composer" onSubmit={handleSubmit}>
-          <textarea
-            className="chat-composer__textarea"
-            aria-label="Chat message"
-            placeholder="Ask something about your AI applications..."
-            value={message}
-            onChange={(event) => {
-              setMessage(event.target.value)
-            }}
-          />
-
-          <div className="chat-composer__footer">
-            <div className="chat-composer__status">
-              <p className="chat-composer__hint">
-                {chatId ? `Chat ID: ${chatId}` : 'No active chat yet.'}
-              </p>
-
-              {error ? <p className="chat-composer__error">{error}</p> : null}
-            </div>
-
-            <button
-              className="chat-composer__button"
-              type="submit"
-              disabled={isStartingChat || isSendingMessage}
-            >
-              {isStartingChat
-                ? 'Starting chat...'
-                : isSendingMessage
-                  ? 'Sending...'
-                  : 'Send message'}
-            </button>
+            <span>DAGS v4.2.0-stable</span>
           </div>
         </form>
-      </div>
+
+        <p className="chat-disclaimer">
+          {error ?? (chatId ? `Chat ID: ${chatId}` : 'DAGS can make mistakes. Verify critical technical information.')}
+        </p>
+      </footer>
     </section>
   )
 }

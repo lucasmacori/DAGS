@@ -16,6 +16,9 @@ chat:
   default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:llama3.2}}
   prompt:
     system: ${CHAT_PROMPT_SYSTEM:You are a helpful AI assistant. Answer clearly and accurately. Keep the conversation natural.}
+  memory:
+    provider: ${CHAT_MEMORY_PROVIDER:in-memory}
+    max-messages: ${CHAT_MEMORY_MAX_MESSAGES:20}
 
 security:
   basic-auth:
