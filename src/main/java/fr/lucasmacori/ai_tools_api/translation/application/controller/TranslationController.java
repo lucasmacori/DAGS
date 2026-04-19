@@ -21,6 +21,6 @@ class TranslationController {
 
 	@PostMapping(path = "/translate", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	Flux<String> translate(@Valid @RequestBody TranslateTextRequest request) {
-		return Flux.just(applicationService.translate(request).text());
+		return applicationService.translate(request);
 	}
 }

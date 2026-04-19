@@ -3,9 +3,9 @@ package fr.lucasmacori.ai_tools_api.translation.application.service;
 import org.springframework.stereotype.Service;
 
 import fr.lucasmacori.ai_tools_api.translation.application.dto.TranslateTextRequest;
-import fr.lucasmacori.ai_tools_api.translation.domain.model.Translation;
 import fr.lucasmacori.ai_tools_api.translation.domain.model.TranslationRequest;
 import fr.lucasmacori.ai_tools_api.translation.domain.service.TranslationService;
+import reactor.core.publisher.Flux;
 
 @Service
 public class TranslateTextApplicationService {
@@ -16,7 +16,7 @@ public class TranslateTextApplicationService {
 		this.translationService = translationService;
 	}
 
-	public Translation translate(TranslateTextRequest request) {
+	public Flux<String> translate(TranslateTextRequest request) {
 		TranslationRequest translationRequest = new TranslationRequest(
 				request.baseLanguage(),
 				request.targetLanguage(),

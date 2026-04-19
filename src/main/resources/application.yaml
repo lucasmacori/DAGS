@@ -1,3 +1,18 @@
 spring:
   application:
     name: ai-tools-api
+  ai:
+    ollama:
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:llama3.2}
+
+translation:
+  prompt:
+    system: ${TRANSLATION_PROMPT_SYSTEM:You are a professional translator. Translate the user text exactly into the target language. Preserve meaning, tone, and formatting. Return only the translated text. When encountering values like \n keep them}
+
+security:
+  basic-auth:
+    username: ${API_BASIC_AUTH_USERNAME:ai}
+    password: ${API_BASIC_AUTH_PASSWORD:completelylocal}

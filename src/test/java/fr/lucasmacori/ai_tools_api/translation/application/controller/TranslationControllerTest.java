@@ -10,14 +10,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webflux.test.autoconfigure.WebFluxTest;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.FluxExchangeResult;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import fr.lucasmacori.ai_tools_api.infrastructure.security.SecurityConfiguration;
 import fr.lucasmacori.ai_tools_api.translation.application.service.TranslateTextApplicationService;
-import fr.lucasmacori.ai_tools_api.translation.domain.model.Translation;
+import reactor.core.publisher.Flux;
 
 @WebFluxTest(TranslationController.class)
+@Import(SecurityConfiguration.class)
 class TranslationControllerTest {
 
 	@Autowired
@@ -26,11 +29,32 @@ class TranslationControllerTest {
 	@MockitoBean
 	private TranslateTextApplicationService applicationService;
 
+	private WebTestClient authenticatedClient() {
+		return webTestClient.mutate()
+				.defaultHeaders(headers -> headers.setBasicAuth("ai", "completelylocal"))
+				.build();
+	}
+
+	@Test
+	void translateReturnsUnauthorizedWithoutAuthentication() {
+		webTestClient.post()
+				.uri("/translate")
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue("""
+						{
+						  \"target_language\": \"fr\",
+						  \"text\": \"Hello\"
+						}
+						""")
+				.exchange()
+				.expectStatus().isUnauthorized();
+	}
+
 	@Test
 	void translateStreamsTranslatedText() {
-		when(applicationService.translate(any())).thenReturn(new Translation("Translated text"));
+		when(applicationService.translate(any())).thenReturn(Flux.just("Translated text"));
 
-		FluxExchangeResult<String> result = webTestClient.post()
+		FluxExchangeResult<String> result = authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
@@ -60,7 +84,7 @@ class TranslationControllerTest {
 
 	@Test
 	void translateReturnsBadRequestWhenTargetLanguageIsMissing() {
-		webTestClient.post()
+		authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
@@ -74,7 +98,7 @@ class TranslationControllerTest {
 
 	@Test
 	void translateReturnsBadRequestWhenTargetLanguageIsBlank() {
-		webTestClient.post()
+		authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
@@ -89,7 +113,7 @@ class TranslationControllerTest {
 
 	@Test
 	void translateReturnsBadRequestWhenTextIsMissing() {
-		webTestClient.post()
+		authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
@@ -103,7 +127,7 @@ class TranslationControllerTest {
 
 	@Test
 	void translateReturnsBadRequestWhenTextIsBlank() {
-		webTestClient.post()
+		authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
@@ -118,9 +142,9 @@ class TranslationControllerTest {
 
 	@Test
 	void translateAllowsMissingBaseLanguage() {
-		when(applicationService.translate(any())).thenReturn(new Translation("Translated text"));
+		when(applicationService.translate(any())).thenReturn(Flux.just("Translated text"));
 
-		webTestClient.post()
+		authenticatedClient().post()
 				.uri("/translate")
 				.contentType(MediaType.APPLICATION_JSON)
 				.bodyValue("""
