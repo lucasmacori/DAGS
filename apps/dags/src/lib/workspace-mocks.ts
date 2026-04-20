@@ -11,6 +11,12 @@ export const sidebarUsers = {
     avatar:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDXKpCUvYLey6W_e0OK8kFzt1EiVAVomzMCWmuOej-wmNuPJ1zRnl-fySO-7L21EtJdpXw-NxeZZA5aeKFi1V0LhkbGCGJbVlxPXSx-GQb7hLtDwWLpN68wP2frGBaCDh4AdwZ5C4nw2W2cvo1yJYIH2EOk0FO9GJJk1RyTR5QaXR386aY1Nt9h_R5pdFouTbsfsepE5rDbDlSCN55oADSCGEwfYcZmi44brEl1abFxvJXlUEfBKI0bj7qto2fNkKYwPtSL7EOya9nP',
   },
+  briefing: {
+    name: 'Alex Rivera',
+    role: 'Knowledge Manager',
+    avatar:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDXKpCUvYLey6W_e0OK8kFzt1EiVAVomzMCWmuOej-wmNuPJ1zRnl-fySO-7L21EtJdpXw-NxeZZA5aeKFi1V0LhkbGCGJbVlxPXSx-GQb7hLtDwWLpN68wP2frGBaCDh4AdwZ5C4nw2W2cvo1yJYIH2EOk0FO9GJJk1RyTR5QaXR386aY1Nt9h_R5pdFouTbsfsepE5rDbDlSCN55oADSCGEwfYcZmi44brEl1abFxvJXlUEfBKI0bj7qto2fNkKYwPtSL7EOya9nP',
+  },
   settings: {
     name: 'Alex River',
     role: 'Free Tier',
@@ -121,6 +127,33 @@ export const historyItems = [
     timestamp: 'Yesterday, 6:12 PM',
     summary: 'Investigated retry fanout and suggested timeout budget changes.',
     status: 'Needs review',
+  },
+]
+
+export const briefingSources = [
+  {
+    id: 'src-1',
+    type: 'Article Link',
+    icon: 'link',
+    title: 'AI Safety Benchmarks 2024',
+    url: 'anthropic.com/research/safety-benchmarks',
+    syncedAt: 'Synced 2m ago',
+  },
+  {
+    id: 'src-2',
+    type: 'RSS Feed',
+    icon: 'rss_feed',
+    title: 'The High-Frequency Tech Digest',
+    url: 'rss.techdigest.io/feed.xml',
+    syncedAt: 'Synced 1h ago',
+  },
+  {
+    id: 'src-3',
+    type: 'Plain Text',
+    icon: 'description',
+    title: 'Q4 Strategic Directives - Internal',
+    url: '"Focus on agentic workflow integration..."',
+    syncedAt: 'Synced 3d ago',
   },
 ]
 

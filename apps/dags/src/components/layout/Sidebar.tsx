@@ -6,6 +6,7 @@ import { sidebarUsers } from '../../lib/workspace-mocks'
 const navigationItems = [
   { to: '/chat', label: 'Chat', icon: 'forum' },
   { to: '/translate', label: 'Translate', icon: 'translate' },
+  { to: '/briefing', label: 'Briefing', icon: 'summarize' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
 ] as const
 
@@ -30,7 +31,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     ? sidebarUsers.settings
     : pathname.startsWith('/translate')
       ? sidebarUsers.translate
-      : sidebarUsers.chat
+      : pathname.startsWith('/briefing')
+        ? sidebarUsers.briefing
+        : sidebarUsers.chat
 
   return (
     <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>

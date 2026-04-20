@@ -14,6 +14,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ConversationRouteImport } from './routes/conversation'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as BriefingRouteImport } from './routes/briefing'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
@@ -44,6 +45,11 @@ const ConversationRoute = ConversationRouteImport.update({
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BriefingRoute = BriefingRouteImport.update({
+  id: '/briefing',
+  path: '/briefing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ArchiveRoute = ArchiveRouteImport.update({
@@ -81,6 +87,7 @@ const ConversationConversationIdHistoryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/briefing': typeof BriefingRoute
   '/chat': typeof ChatRoute
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/briefing': typeof BriefingRoute
   '/chat': typeof ChatRoute
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
+  '/briefing': typeof BriefingRoute
   '/chat': typeof ChatRoute
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/archive'
+    | '/briefing'
     | '/chat'
     | '/conversation'
     | '/history'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/archive'
+    | '/briefing'
     | '/chat'
     | '/conversation'
     | '/history'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/archive'
+    | '/briefing'
     | '/chat'
     | '/conversation'
     | '/history'
@@ -163,6 +175,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
+  BriefingRoute: typeof BriefingRoute
   ChatRoute: typeof ChatRoute
   ConversationRoute: typeof ConversationRouteWithChildren
   HistoryRoute: typeof HistoryRoute
@@ -208,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/chat'
       preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/briefing': {
+      id: '/briefing'
+      path: '/briefing'
+      fullPath: '/briefing'
+      preLoaderRoute: typeof BriefingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/archive': {
@@ -271,6 +291,7 @@ const ConversationRouteWithChildren = ConversationRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
+  BriefingRoute: BriefingRoute,
   ChatRoute: ChatRoute,
   ConversationRoute: ConversationRouteWithChildren,
   HistoryRoute: HistoryRoute,
