@@ -12,4 +12,8 @@ import fr.lucasmacori.ai_tools_api.briefing.infrastructure.entity.SourceEntity;
 public interface SourceJDBCRepository extends ListCrudRepository<SourceEntity, UUID> {
 	@Override
 	List<SourceEntity> findAll();
+
+	List<SourceEntity> findByType(String type);
+
+	List<SourceEntity> findByTypeAndArticleReadAtIsNull(String type);
 }

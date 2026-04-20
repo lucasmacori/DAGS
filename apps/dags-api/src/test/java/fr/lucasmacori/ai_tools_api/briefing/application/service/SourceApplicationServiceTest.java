@@ -25,7 +25,7 @@ class SourceApplicationServiceTest {
 	@Test
 	void getSourcesDelegatesToDomainService() {
 		SourceService sourceService = mock(SourceService.class);
-		List<Source> expected = List.of(new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now()));
+		List<Source> expected = List.of(new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now(), null));
 		when(sourceService.getSources()).thenReturn(expected);
 		SourceApplicationService applicationService = new SourceApplicationService(sourceService);
 
@@ -37,7 +37,7 @@ class SourceApplicationServiceTest {
 	@Test
 	void createSourceDelegatesToDomainService() {
 		SourceService sourceService = mock(SourceService.class);
-		Source source = new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now());
+		Source source = new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now(), null);
 		when(sourceService.create(SourceType.PLAIN_TEXT, "Title", "Body")).thenReturn(source);
 		SourceApplicationService applicationService = new SourceApplicationService(sourceService);
 

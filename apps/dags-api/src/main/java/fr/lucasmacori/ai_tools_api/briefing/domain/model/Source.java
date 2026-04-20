@@ -8,5 +8,6 @@ public record Source(
 		String title,
 		String content,
 		LocalDateTime createdAt,
-		LocalDateTime updatedAt) {
+		LocalDateTime updatedAt,
+		LocalDateTime articleReadAt) {
 }

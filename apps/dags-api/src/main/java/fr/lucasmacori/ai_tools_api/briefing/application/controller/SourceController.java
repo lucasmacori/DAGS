@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.lucasmacori.ai_tools_api.briefing.application.dto.CreateSourceRequestBody;
 import fr.lucasmacori.ai_tools_api.briefing.application.dto.SourceResponse;
 import fr.lucasmacori.ai_tools_api.briefing.application.dto.UpdateSourceRequestBody;
+import fr.lucasmacori.ai_tools_api.briefing.application.service.ArticleReadApplicationService;
+import fr.lucasmacori.ai_tools_api.briefing.application.service.RssFeedReadApplicationService;
 import fr.lucasmacori.ai_tools_api.briefing.application.service.SourceApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ import lombok.RequiredArgsConstructor;
 class SourceController {
 
 	private final SourceApplicationService applicationService;
+	private final RssFeedReadApplicationService rssFeedReadApplicationService;
+	private final ArticleReadApplicationService articleReadApplicationService;
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	List<SourceResponse> getSources() {
@@ -36,6 +40,18 @@ class SourceController {
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	SourceResponse createSource(@Valid @RequestBody CreateSourceRequestBody request) {
 		return SourceResponse.from(applicationService.createSource(request));
+	}
+
+	@PostMapping(path = "/rss/read")
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	void readRssFeeds() {
+		rssFeedReadApplicationService.triggerReadAllFeeds();
+	}
+
+	@PostMapping(path = "/articles/read")
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	void readArticles() {
+		articleReadApplicationService.triggerReadAllArticles();
 	}
 
 	@PatchMapping(path = "/{sourceId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

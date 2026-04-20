@@ -1,0 +1,103 @@
+package fr.lucasmacori.ai_tools_api.briefing.domain.service;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import fr.lucasmacori.ai_tools_api.briefing.domain.model.ArticleContent;
+import fr.lucasmacori.ai_tools_api.briefing.domain.model.RssSourceItemLink;
+import fr.lucasmacori.ai_tools_api.briefing.domain.model.Source;
+import fr.lucasmacori.ai_tools_api.briefing.domain.repository.IRssSourceItemRepository;
+import fr.lucasmacori.ai_tools_api.briefing.infrastructure.article.ArticleContentClient;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class ArticleReadService {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ArticleReadService.class);
+
+	private static final String DEFAULT_USER_ID = "hardcoded-user-id";
+
+	private final SourceService sourceService;
+	private final IRssSourceItemRepository rssSourceItemRepository;
+	private final ArticleContentClient articleContentClient;
+
+	public void readAllArticles() {
+		Map<String, ReadTargets> targetsByUrl = new LinkedHashMap<>();
+
+		List<Source> articleSources = sourceService.getUnreadArticleSources();
+		for (Source source : articleSources) {
+			addSourceTarget(targetsByUrl, source);
+		}
+
+		for (RssSourceItemLink link : rssSourceItemRepository.findUnreadArticleLinks(DEFAULT_USER_ID)) {
+			addRssTarget(targetsByUrl, link);
+		}
+
+		for (Map.Entry<String, ReadTargets> entry : targetsByUrl.entrySet()) {
+			readAndMark(entry.getKey(), entry.getValue());
+		}
+	}
+
+	private void addSourceTarget(Map<String, ReadTargets> targetsByUrl, Source source) {
+		String url = source.content();
+		if (url == null || url.isBlank()) {
+			return;
+		}
+
+		targetsByUrl.computeIfAbsent(url.trim(), ignored -> new ReadTargets()).sourceIds().add(source.sourceId());
+	}
+
+	private void addRssTarget(Map<String, ReadTargets> targetsByUrl, RssSourceItemLink item) {
+		String url = item.link();
+		if (url == null || url.isBlank()) {
+			return;
+		}
+
+		targetsByUrl.computeIfAbsent(url.trim(), ignored -> new ReadTargets()).rssItemIds().add(item.rssSourceItemId());
+	}
+
+	private void readAndMark(String url, ReadTargets targets) {
+
+		try {
+			ArticleContent article = articleContentClient.readArticle(url);
+			logArticle(article);
+			for (String sourceId : targets.sourceIds()) {
+				sourceService.markArticleAsRead(sourceId);
+			}
+			for (String rssSourceItemId : targets.rssItemIds()) {
+				rssSourceItemRepository.markArticleLinkAsRead(DEFAULT_USER_ID, rssSourceItemId);
+			}
+		}
+		catch (RuntimeException exception) {
+			LOGGER.warn("[ARTICLE][FAILED] url={} reason={}", url, exception.getMessage());
+		}
+	}
+
+	private void logArticle(ArticleContent article) {
+		LOGGER.info("[ARTICLE][READ] userId={} url={} title=\"{}\" content=\"{}\"",
+				DEFAULT_USER_ID,
+				article.url(),
+				article.title(),
+				article.content());
+	}
+
+	private static final class ReadTargets {
+		private final List<String> sourceIds = new ArrayList<>();
+		private final List<String> rssItemIds = new ArrayList<>();
+
+		private List<String> sourceIds() {
+			return sourceIds;
+		}
+
+		private List<String> rssItemIds() {
+			return rssItemIds;
+		}
+	}
+}

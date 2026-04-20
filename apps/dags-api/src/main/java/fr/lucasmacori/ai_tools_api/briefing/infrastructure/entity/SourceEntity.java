@@ -22,22 +22,26 @@ public class SourceEntity implements Persistable<UUID> {
 	private String content;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private LocalDateTime articleReadAt;
 
 	@Transient
 	private boolean isNew;
 
 	@PersistenceCreator
-	public SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
-		this(sourceId, type, title, content, createdAt, updatedAt, false);
+	public SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt,
+			LocalDateTime articleReadAt) {
+		this(sourceId, type, title, content, createdAt, updatedAt, articleReadAt, false);
 	}
 
-	private SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt, boolean isNew) {
+	private SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt,
+			LocalDateTime articleReadAt, boolean isNew) {
 		this.sourceId = sourceId;
 		this.type = type;
 		this.title = title;
 		this.content = content;
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
+		this.articleReadAt = articleReadAt;
 		this.isNew = isNew;
 	}
 
@@ -49,6 +53,7 @@ public class SourceEntity implements Persistable<UUID> {
 				source.content(),
 				source.createdAt(),
 				source.updatedAt(),
+				source.articleReadAt(),
 				true);
 	}
 
@@ -60,6 +65,7 @@ public class SourceEntity implements Persistable<UUID> {
 				source.content(),
 				source.createdAt(),
 				source.updatedAt(),
+				source.articleReadAt(),
 				false);
 	}
 
@@ -70,7 +76,8 @@ public class SourceEntity implements Persistable<UUID> {
 				title,
 				content,
 				createdAt,
-				updatedAt);
+				updatedAt,
+				articleReadAt);
 	}
 
 	@Override

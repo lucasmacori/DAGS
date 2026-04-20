@@ -23,6 +23,14 @@ public class SourceService {
 		return sourceRepository.findAll();
 	}
 
+	public List<Source> getUnreadArticleSources() {
+		return sourceRepository.findUnreadArticleSources();
+	}
+
+	public void markArticleAsRead(String sourceId) {
+		sourceRepository.markArticleAsRead(sourceId);
+	}
+
 	public Source create(SourceType type, String title, String content) {
 		String normalizedTitle = normalizeTitle(title);
 		String normalizedContent = normalizeRequiredText(content, "content");
@@ -35,7 +43,8 @@ public class SourceService {
 				normalizedTitle,
 				normalizedContent,
 				now,
-				now);
+				now,
+				null);
 		return sourceRepository.create(source);
 	}
 
@@ -52,7 +61,8 @@ public class SourceService {
 							nextTitle,
 							nextContent,
 							existing.createdAt(),
-							LocalDateTime.now());
+							LocalDateTime.now(),
+							existing.articleReadAt());
 					return sourceRepository.update(updated);
 				});
 	}
