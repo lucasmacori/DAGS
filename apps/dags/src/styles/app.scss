@@ -1653,7 +1653,66 @@ textarea {
   }
 }
 
-/* Briefing Tool SCSS */
+/* Source Modal */
+.source-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  padding: 1.5rem;
+}
+
+.source-modal {
+  background: $surface-low;
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  max-width: 32rem;
+  border: 1px solid rgba($outline-variant, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.source-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba($outline-variant, 0.1);
+}
+
+.source-modal__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.source-modal__form {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  gap: 1.5rem;
+}
+
+.source-modal__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.source-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba($outline-variant, 0.1);
+}
 .briefing-screen {
   min-height: 100vh;
   background: $surface;
@@ -1870,6 +1929,73 @@ textarea {
   &:hover {
     color: $text-secondary;
   }
+}
+
+.briefing-card__actions {
+  position: relative;
+}
+
+.briefing-card__menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color $transition;
+
+  &:hover {
+    background: rgba($surface-highest, 0.6);
+  }
+}
+
+.briefing-card__menu-panel {
+  position: absolute;
+  top: 2.25rem;
+  right: 0;
+  z-index: 5;
+  min-width: 11rem;
+  padding: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  border: 1px solid rgba($outline-variant, 0.15);
+  border-radius: 0.9rem;
+  background: rgba($surface-high, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.briefing-card__menu-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: $text-primary;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color $transition, color $transition;
+
+  &:hover {
+    background: rgba($surface-bright, 0.85);
+  }
+
+  .material-symbols-outlined {
+    font-size: 1rem;
+  }
+}
+
+.briefing-card__menu-button--danger {
+  color: $danger;
 }
 
 .briefing-card__title {

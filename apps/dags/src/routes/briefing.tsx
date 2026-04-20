@@ -1,12 +1,117 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
 import { Topbar } from '../components/layout/Topbar'
-import { briefingSources } from '../lib/workspace-mocks'
+import { SourceModal } from '../components/briefing/SourceModal'
+import type { Source, SourceType } from '../lib/briefing-types'
+import { formatSyncedAt } from '../lib/briefing-types'
 
 export const Route = createFileRoute('/briefing')({
   component: BriefingPage,
 })
 
+function getSourceDisplayDetails(type: SourceType) {
+  switch (type) {
+    case 'ARTICLE_URL':
+      return {
+        badgeClass: 'briefing-card__badge--primary',
+        label: 'Article Link',
+        icon: 'link',
+        dotColor: '#10b981', // emerald-500
+      }
+    case 'RSS_FEED':
+      return {
+        badgeClass: 'briefing-card__badge--tertiary',
+        label: 'RSS Feed',
+        icon: 'rss_feed',
+        dotColor: '#10b981', // emerald-500
+      }
+    case 'PLAIN_TEXT':
+      return {
+        badgeClass: 'briefing-card__badge--default',
+        label: 'Plain Text',
+        icon: 'description',
+        dotColor: '#52525b', // zinc-600
+      }
+    default:
+      return {
+        badgeClass: 'briefing-card__badge--default',
+        label: 'Unknown',
+        icon: 'data_object',
+        dotColor: '#52525b',
+      }
+  }
+}
+
 function BriefingPage() {
+  const [sources, setSources] = useState<Source[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [activeFilter, setActiveFilter] = useState<SourceType | 'ALL'>('ALL')
+  const [activeActionMenuId, setActiveActionMenuId] = useState<string | null>(null)
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSource, setEditingSource] = useState<Source | null>(null)
+
+  const fetchSources = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/source')
+      if (!res.ok) {
+        throw new Error('Failed to load sources.')
+      }
+      const data = await res.json() as Source[]
+      // Sort newest first by updated_at
+      data.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+      setSources(data)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load sources.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSources()
+  }, [])
+
+  const handleSaveSource = async (sourceData: { type: string; title: string; content: string }) => {
+    const url = editingSource ? `/source/${editingSource.source_id}` : '/source'
+    const method = editingSource ? 'PATCH' : 'POST'
+    
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sourceData),
+    })
+
+    if (!res.ok) {
+      throw new Error(await res.text() || 'Failed to save source.')
+    }
+    
+    await fetchSources()
+  }
+
+  const handleDeleteSource = async (sourceId: string) => {
+    if (!window.confirm('Are you sure you want to delete this source?')) return
+
+    try {
+      const res = await fetch(`/source/${sourceId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        throw new Error('Failed to delete source.')
+      }
+      setSources((prev) => prev.filter(s => s.source_id !== sourceId))
+      setActiveActionMenuId(null)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error deleting source.')
+    }
+  }
+
+  const filteredSources = activeFilter === 'ALL' 
+    ? sources 
+    : sources.filter(s => s.type === activeFilter)
+
   return (
     <section className="briefing-screen">
       <Topbar title="Briefing" />
@@ -30,7 +135,15 @@ function BriefingPage() {
             <button className="ghost-button" type="button">
               Preview Summary
             </button>
-            <button className="primary-button" type="button" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button 
+              className="primary-button" 
+              type="button" 
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              onClick={() => {
+                setEditingSource(null)
+                setIsModalOpen(true)
+              }}
+            >
               <span className="material-symbols-outlined" style={{ fontSize: '1.25rem' }}>add_circle</span>
               Add Source
             </button>
@@ -38,7 +151,6 @@ function BriefingPage() {
         </header>
 
         <div className="briefing-dashboard">
-          {/* Row 1: Template (Wide) and Notifications (Narrow) */}
           <div className="briefing-dashboard__wide">
             <details className="briefing-template-card h-full" open>
               <summary className="briefing-template-card__summary">
@@ -52,7 +164,7 @@ function BriefingPage() {
                 <textarea 
                   className="briefing-template-card__textarea" 
                   spellCheck="false"
-                  defaultValue="Summarize the following sources : ${sources.text} ${sources.links} ${sources.feeds}"
+                  defaultValue={"Summarize the following sources : ${sources.text} ${sources.links} ${sources.feeds}"}
                 />
                 <p className="briefing-template-card__hint">
                   <span className="material-symbols-outlined">info</span>
@@ -97,7 +209,6 @@ function BriefingPage() {
             </div>
           </div>
 
-          {/* Row 2: Active Sources (Wide) and Routine Schedule (Narrow) */}
           <div className="briefing-dashboard__wide">
             <section className="briefing-sources">
               <div className="briefing-sources__header">
@@ -106,46 +217,117 @@ function BriefingPage() {
                     <span className="material-symbols-outlined">data_object</span>
                     Active Sources
                   </h3>
-                  <span className="briefing-sources__count">3 Connected</span>
+                  <span className="briefing-sources__count">{sources.length} Connected</span>
                 </div>
                 
                 <div className="briefing-filters">
-                  <button className="briefing-filter briefing-filter--active">All Sources</button>
-                  <button className="briefing-filter">Article Links</button>
-                  <button className="briefing-filter">RSS Feeds</button>
-                  <button className="briefing-filter">Plain Text</button>
+                  <button 
+                    className={`briefing-filter ${activeFilter === 'ALL' ? 'briefing-filter--active' : ''}`}
+                    onClick={() => setActiveFilter('ALL')}
+                  >
+                    All Sources
+                  </button>
+                  <button 
+                    className={`briefing-filter ${activeFilter === 'ARTICLE_URL' ? 'briefing-filter--active' : ''}`}
+                    onClick={() => setActiveFilter('ARTICLE_URL')}
+                  >
+                    Article Links
+                  </button>
+                  <button 
+                    className={`briefing-filter ${activeFilter === 'RSS_FEED' ? 'briefing-filter--active' : ''}`}
+                    onClick={() => setActiveFilter('RSS_FEED')}
+                  >
+                    RSS Feeds
+                  </button>
+                  <button 
+                    className={`briefing-filter ${activeFilter === 'PLAIN_TEXT' ? 'briefing-filter--active' : ''}`}
+                    onClick={() => setActiveFilter('PLAIN_TEXT')}
+                  >
+                    Plain Text
+                  </button>
                 </div>
               </div>
 
               <div className="briefing-cards-grid">
-                {briefingSources.map((source) => {
-                  let badgeClass = 'briefing-card__badge--default'
-                  if (source.type === 'Article Link') badgeClass = 'briefing-card__badge--primary'
-                  else if (source.type === 'RSS Feed') badgeClass = 'briefing-card__badge--tertiary'
-                  
-                  let dotColor = '#10b981' // emerald-500
-                  if (source.type === 'Plain Text') dotColor = '#52525b' // zinc-600
+                {isLoading && sources.length === 0 && (
+                  <p style={{ color: '#c7c4d7', fontSize: '0.875rem' }}>Loading sources...</p>
+                )}
+                {error && (
+                  <p style={{ color: '#ffb4ab', fontSize: '0.875rem' }}>{error}</p>
+                )}
+                
+                {filteredSources.map((source) => {
+                  const details = getSourceDisplayDetails(source.type)
 
                   return (
-                    <article key={source.id} className="briefing-card">
+                    <article key={source.source_id} className="briefing-card group">
                       <div className="briefing-card__top">
-                        <span className={`briefing-card__badge ${badgeClass}`}>{source.type}</span>
-                        <span className="material-symbols-outlined briefing-card__menu">more_vert</span>
+                        <span className={`briefing-card__badge ${details.badgeClass}`}>{details.label}</span>
+
+                        <div className="briefing-card__actions">
+                          <button
+                            className="briefing-card__menu-trigger"
+                            type="button"
+                            aria-label="Source actions"
+                            onClick={() => {
+                              setActiveActionMenuId((currentValue) =>
+                                currentValue === source.source_id ? null : source.source_id,
+                              )
+                            }}
+                          >
+                            <span className="material-symbols-outlined briefing-card__menu">more_vert</span>
+                          </button>
+
+                          {activeActionMenuId === source.source_id ? (
+                            <div className="briefing-card__menu-panel">
+                              <button
+                                className="briefing-card__menu-button"
+                                type="button"
+                                onClick={() => {
+                                  setEditingSource(source)
+                                  setIsModalOpen(true)
+                                  setActiveActionMenuId(null)
+                                }}
+                              >
+                                <span className="material-symbols-outlined">edit</span>
+                                Edit Source
+                              </button>
+
+                              <button
+                                className="briefing-card__menu-button briefing-card__menu-button--danger"
+                                type="button"
+                                onClick={() => {
+                                  handleDeleteSource(source.source_id)
+                                }}
+                              >
+                                <span className="material-symbols-outlined">delete</span>
+                                Delete Source
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                       <h4 className="briefing-card__title">{source.title}</h4>
-                      <p className={`briefing-card__url ${source.type === 'Plain Text' ? 'italic' : ''}`}>{source.url}</p>
+                      <p className={`briefing-card__url ${source.type === 'PLAIN_TEXT' ? 'italic' : ''}`}>{source.content}</p>
                       <div className="briefing-card__footer">
                         <div className="briefing-card__sync">
-                          <div className="briefing-card__sync-dot" style={{ backgroundColor: dotColor }}></div>
-                          <span>{source.syncedAt}</span>
+                          <div className="briefing-card__sync-dot" style={{ backgroundColor: details.dotColor }}></div>
+                          <span>{formatSyncedAt(source.updated_at)}</span>
                         </div>
-                        <span className="material-symbols-outlined briefing-card__icon">{source.icon}</span>
+                        <span className="material-symbols-outlined briefing-card__icon">{details.icon}</span>
                       </div>
                     </article>
                   )
                 })}
 
-                <button className="briefing-card briefing-card--add" type="button">
+                <button 
+                  className="briefing-card briefing-card--add" 
+                  type="button"
+                  onClick={() => {
+                    setEditingSource(null)
+                    setIsModalOpen(true)
+                  }}
+                >
                   <span className="material-symbols-outlined">add_circle</span>
                   <span>Connect New Source</span>
                 </button>
@@ -204,6 +386,13 @@ function BriefingPage() {
           </div>
         </div>
       </div>
+
+      <SourceModal 
+        isOpen={isModalOpen}
+        source={editingSource}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSource}
+      />
     </section>
   )
 }

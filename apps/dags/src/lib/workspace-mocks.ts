@@ -130,33 +130,6 @@ export const historyItems = [
   },
 ]
 
-export const briefingSources = [
-  {
-    id: 'src-1',
-    type: 'Article Link',
-    icon: 'link',
-    title: 'AI Safety Benchmarks 2024',
-    url: 'anthropic.com/research/safety-benchmarks',
-    syncedAt: 'Synced 2m ago',
-  },
-  {
-    id: 'src-2',
-    type: 'RSS Feed',
-    icon: 'rss_feed',
-    title: 'The High-Frequency Tech Digest',
-    url: 'rss.techdigest.io/feed.xml',
-    syncedAt: 'Synced 1h ago',
-  },
-  {
-    id: 'src-3',
-    type: 'Plain Text',
-    icon: 'description',
-    title: 'Q4 Strategic Directives - Internal',
-    url: '"Focus on agentic workflow integration..."',
-    syncedAt: 'Synced 3d ago',
-  },
-]
-
 export const archiveItems = [
   {
     id: 'arc-01',
