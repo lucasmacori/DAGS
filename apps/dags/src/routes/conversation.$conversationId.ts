@@ -1,16 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getAiToolsApiConfig } from '../../lib/ai-tools-api'
 
-type ChatRequest = {
-  chat_id: string
-  message: string
-  model?: string
+import { getAiToolsApiConfig } from '../lib/ai-tools-api'
+
+type ConversationUpdateRequest = {
+  name?: string
 }
 
-export const Route = createFileRoute('/api/chat')({
+export const Route = createFileRoute('/conversation/$conversationId')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      PATCH: async ({ params, request }) => {
         let apiBaseUrl: string
         let authorization: string
 
@@ -30,15 +29,26 @@ export const Route = createFileRoute('/api/chat')({
           )
         }
 
-        const body = (await request.json()) as Partial<ChatRequest>
-        const payload: ChatRequest = {
-          chat_id: body.chat_id?.trim() ?? '',
-          message: body.message?.trim() ?? '',
-          model: body.model?.trim() || 'gemma4:e4b',
+        const body = (await request.json()) as Partial<ConversationUpdateRequest>
+        const payload: ConversationUpdateRequest = {}
+
+        if (body.name !== undefined) {
+          const nextName = body.name.trim()
+
+          if (!nextName) {
+            return new Response('name must not be empty.', {
+              status: 400,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+              },
+            })
+          }
+
+          payload.name = nextName
         }
 
-        if (!payload.chat_id || !payload.message) {
-          return new Response('chat_id and message are required.', {
+        if (Object.keys(payload).length === 0) {
+          return new Response('No editable fields were provided.', {
             status: 400,
             headers: {
               'Content-Type': 'text/plain; charset=utf-8',
@@ -46,19 +56,22 @@ export const Route = createFileRoute('/api/chat')({
           })
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/chat`, {
-          method: 'POST',
-          headers: {
-            Authorization: authorization,
-            'Content-Type': 'application/json',
+        const upstreamResponse = await fetch(
+          `${apiBaseUrl}/conversation/${params.conversationId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: authorization,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
           },
-          body: JSON.stringify(payload),
-        })
+        )
 
         if (!upstreamResponse.ok) {
           const message = await upstreamResponse.text()
 
-          return new Response(message || 'Could not send chat message.', {
+          return new Response(message || 'Could not update conversation.', {
             status: upstreamResponse.status,
             headers: {
               'Content-Type': 'text/plain; charset=utf-8',
@@ -72,7 +85,7 @@ export const Route = createFileRoute('/api/chat')({
             'Cache-Control': 'no-store',
             'Content-Type':
               upstreamResponse.headers.get('content-type') ??
-              'text/event-stream; charset=utf-8',
+              'application/json; charset=utf-8',
           },
         })
       },

@@ -1,5 +1,8 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
+import { ConversationRenameDialog } from '../chat/ConversationRenameDialog'
 import { useConversations } from '../../lib/conversations'
 import { sidebarUsers } from '../../lib/workspace-mocks'
 
@@ -25,7 +28,35 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     select: (state) => state.location.pathname,
   })
   const navigate = useNavigate()
-  const { conversations, activeConversation, setActiveConversation } = useConversations()
+  const { conversations, activeConversation, renameConversation, setActiveConversation } = useConversations()
+  const [contextMenu, setContextMenu] = useState<{
+    conversationId: string
+    x: number
+    y: number
+  } | null>(null)
+  const [renameConversationTarget, setRenameConversationTarget] = useState<{
+    conversationId: string
+    conversationName: string
+  } | null>(null)
+
+  useEffect(() => {
+    function handleCloseContextMenu() {
+      setContextMenu(null)
+    }
+
+    window.addEventListener('click', handleCloseContextMenu)
+    window.addEventListener('blur', handleCloseContextMenu)
+
+    return () => {
+      window.removeEventListener('click', handleCloseContextMenu)
+      window.removeEventListener('blur', handleCloseContextMenu)
+    }
+  }, [])
+
+  async function handleRenameConversation(conversationId: string, nextName: string) {
+    await renameConversation(conversationId, { name: nextName })
+    setContextMenu(null)
+  }
 
   const currentUser = pathname.startsWith('/settings')
     ? sidebarUsers.settings
@@ -67,6 +98,14 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     key={conversation.conversationId}
                     type="button"
                     className={`sidebar__sublink ${activeConversation?.conversationId === conversation.conversationId ? 'sidebar__sublink--active' : ''}`}
+                    onContextMenu={(event) => {
+                      event.preventDefault()
+                      setContextMenu({
+                        conversationId: conversation.conversationId,
+                        x: event.clientX,
+                        y: event.clientY,
+                      })
+                    }}
                     onClick={() => {
                       setActiveConversation(conversation)
                       navigate({ to: '/chat' })
@@ -112,6 +151,81 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
         </div>
       </div>
+
+      {contextMenu && typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className="briefing-card__menu-panel sidebar__context-menu"
+              style={{ 
+                left: contextMenu.x, 
+                top: contextMenu.y
+              }}
+            >
+              {(() => {
+                const conversation = conversations.find(
+                  (item) => item.conversationId === contextMenu.conversationId,
+                )
+
+                if (!conversation) {
+                  return null
+                }
+
+                return (
+                  <>
+                    <button
+                      className="briefing-card__menu-button"
+                      type="button"
+                      onClick={() => {
+                        setRenameConversationTarget({
+                          conversationId: conversation.conversationId,
+                          conversationName: conversation.conversationName,
+                        })
+                        setContextMenu(null)
+                      }}
+                    >
+                      <span className="material-symbols-outlined">edit</span>
+                      Rename Conversation
+                    </button>
+                    <button
+                      className="briefing-card__menu-button briefing-card__menu-button--danger"
+                      type="button"
+                      onClick={() => {
+                        setContextMenu(null)
+                      }}
+                    >
+                      <span className="material-symbols-outlined">delete</span>
+                      Delete Conversation
+                    </button>
+                  </>
+                )
+              })()}
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {renameConversationTarget ? (
+        <ConversationRenameDialog
+          initialName={renameConversationTarget.conversationName}
+          isOpen={Boolean(renameConversationTarget)}
+          onClose={() => {
+            setRenameConversationTarget(null)
+          }}
+          onSave={async (nextName) => {
+            try {
+              await handleRenameConversation(renameConversationTarget.conversationId, nextName)
+              setRenameConversationTarget(null)
+            } catch (caughtError) {
+              window.alert(
+                caughtError instanceof Error
+                  ? caughtError.message
+                  : 'Could not rename conversation.',
+              )
+              throw caughtError
+            }
+          }}
+        />
+      ) : null}
     </aside>
   )
 }

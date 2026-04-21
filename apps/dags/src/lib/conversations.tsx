@@ -7,10 +7,11 @@ export type Conversation = {
 }
 
 type ConversationContextType = {
-  conversations: Conversation[]
-  activeConversation: Conversation | null
-  setActiveConversation: (c: Conversation | null) => void
-  refreshConversations: () => Promise<void>
+	conversations: Conversation[]
+	activeConversation: Conversation | null
+	renameConversation: (conversationId: string, updates: { name?: string }) => Promise<void>
+	setActiveConversation: (c: Conversation | null) => void
+	refreshConversations: () => Promise<void>
 }
 
 const ConversationContext = createContext<ConversationContextType | null>(null)
@@ -18,6 +19,40 @@ const ConversationContext = createContext<ConversationContextType | null>(null)
 export function ConversationProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
+
+	async function renameConversation(conversationId: string, updates: { name?: string }) {
+		const nextName = updates.name?.trim()
+
+    if (!nextName) {
+      return
+    }
+
+    const response = await fetch(`/conversation/${conversationId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name: nextName }),
+    })
+
+    if (!response.ok) {
+      throw new Error((await response.text()).trim() || 'Failed to rename conversation.')
+    }
+
+    setConversations((currentConversations) =>
+      currentConversations.map((conversation) =>
+        conversation.conversationId === conversationId
+          ? { ...conversation, conversationName: nextName }
+          : conversation,
+      ),
+    )
+
+    setActiveConversation((currentConversation) =>
+      currentConversation?.conversationId === conversationId
+        ? { ...currentConversation, conversationName: nextName }
+        : currentConversation,
+    )
+  }
 
   async function refreshConversations() {
     try {
@@ -42,6 +77,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       value={{
         conversations,
         activeConversation,
+        renameConversation,
         setActiveConversation,
         refreshConversations,
       }}

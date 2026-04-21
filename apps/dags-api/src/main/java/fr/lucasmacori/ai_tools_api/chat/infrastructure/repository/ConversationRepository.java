@@ -1,6 +1,8 @@
 package fr.lucasmacori.ai_tools_api.chat.infrastructure.repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -25,6 +27,18 @@ public class ConversationRepository implements IConversationRepository {
 	@Override
 	public Conversation createConversation(String name) {
 		return conversationJDBCRepository.save(ConversationEntity.fromName(name))
+				.toConversation();
+	}
+
+	@Override
+	public Optional<Conversation> findById(String conversationId) {
+		return conversationJDBCRepository.findById(UUID.fromString(conversationId))
+				.map(ConversationEntity::toConversation);
+	}
+
+	@Override
+	public Conversation updateConversation(Conversation conversation) {
+		return conversationJDBCRepository.save(ConversationEntity.fromExistingConversation(conversation))
 				.toConversation();
 	}
 }

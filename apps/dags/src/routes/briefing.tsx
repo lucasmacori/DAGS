@@ -16,28 +16,28 @@ function getSourceDisplayDetails(type: SourceType) {
         badgeClass: 'briefing-card__badge--primary',
         label: 'Article Link',
         icon: 'link',
-        dotColor: '#10b981', // emerald-500
+        dotClass: 'briefing-card__sync-dot--emerald',
       }
     case 'RSS_FEED':
       return {
         badgeClass: 'briefing-card__badge--tertiary',
         label: 'RSS Feed',
         icon: 'rss_feed',
-        dotColor: '#10b981', // emerald-500
+        dotClass: 'briefing-card__sync-dot--emerald',
       }
     case 'PLAIN_TEXT':
       return {
         badgeClass: 'briefing-card__badge--default',
         label: 'Plain Text',
         icon: 'description',
-        dotColor: '#52525b', // zinc-600
+        dotClass: 'briefing-card__sync-dot--zinc',
       }
     default:
       return {
         badgeClass: 'briefing-card__badge--default',
         label: 'Unknown',
         icon: 'data_object',
-        dotColor: '#52525b',
+        dotClass: 'briefing-card__sync-dot--zinc',
       }
   }
 }
@@ -136,15 +136,14 @@ function BriefingPage() {
               Preview Summary
             </button>
             <button 
-              className="primary-button" 
+              className="primary-button briefing-header__add-btn" 
               type="button" 
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               onClick={() => {
                 setEditingSource(null)
                 setIsModalOpen(true)
               }}
             >
-              <span className="material-symbols-outlined" style={{ fontSize: '1.25rem' }}>add_circle</span>
+              <span className="material-symbols-outlined briefing-header__add-icon">add_circle</span>
               Add Source
             </button>
           </div>
@@ -250,10 +249,10 @@ function BriefingPage() {
 
               <div className="briefing-cards-grid">
                 {isLoading && sources.length === 0 && (
-                  <p style={{ color: '#c7c4d7', fontSize: '0.875rem' }}>Loading sources...</p>
+                  <p className="briefing-sources__loading">Loading sources...</p>
                 )}
                 {error && (
-                  <p style={{ color: '#ffb4ab', fontSize: '0.875rem' }}>{error}</p>
+                  <p className="briefing-sources__error">{error}</p>
                 )}
                 
                 {filteredSources.map((source) => {
@@ -311,7 +310,7 @@ function BriefingPage() {
                       <p className={`briefing-card__url ${source.type === 'PLAIN_TEXT' ? 'italic' : ''}`}>{source.content}</p>
                       <div className="briefing-card__footer">
                         <div className="briefing-card__sync">
-                          <div className="briefing-card__sync-dot" style={{ backgroundColor: details.dotColor }}></div>
+                          <div className={`briefing-card__sync-dot ${details.dotClass}`}></div>
                           <span>{formatSyncedAt(source.updated_at)}</span>
                         </div>
                         <span className="material-symbols-outlined briefing-card__icon">{details.icon}</span>
@@ -381,7 +380,7 @@ function BriefingPage() {
                   </p>
                 </div>
               </div>
-              <button className="briefing-update-btn" style={{ marginTop: '0.5rem' }}>Update Configuration</button>
+              <button className="briefing-update-btn briefing-update-btn--spaced">Update Configuration</button>
             </div>
           </div>
         </div>

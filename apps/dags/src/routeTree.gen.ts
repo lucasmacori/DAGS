@@ -19,6 +19,7 @@ import { Route as BriefingRouteImport } from './routes/briefing'
 import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SourceSourceIdRouteImport } from './routes/source.$sourceId'
+import { Route as ConversationConversationIdRouteImport } from './routes/conversation.$conversationId'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiGenerateChatRouteImport } from './routes/api/generate-chat'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -74,6 +75,12 @@ const SourceSourceIdRoute = SourceSourceIdRouteImport.update({
   path: '/$sourceId',
   getParentRoute: () => SourceRoute,
 } as any)
+const ConversationConversationIdRoute =
+  ConversationConversationIdRouteImport.update({
+    id: '/$conversationId',
+    path: '/$conversationId',
+    getParentRoute: () => ConversationRoute,
+  } as any)
 const ApiTranslateRoute = ApiTranslateRouteImport.update({
   id: '/api/translate',
   path: '/api/translate',
@@ -91,9 +98,9 @@ const ApiChatRoute = ApiChatRouteImport.update({
 } as any)
 const ConversationConversationIdHistoryRoute =
   ConversationConversationIdHistoryRouteImport.update({
-    id: '/$conversationId/history',
-    path: '/$conversationId/history',
-    getParentRoute: () => ConversationRoute,
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => ConversationConversationIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/conversation/$conversationId/history'
   fileRoutesByTo: FileRoutesByTo
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/conversation/$conversationId/history'
   id:
@@ -192,6 +204,7 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/conversation/$conversationId/history'
   fileRoutesById: FileRoutesById
@@ -283,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SourceSourceIdRouteImport
       parentRoute: typeof SourceRoute
     }
+    '/conversation/$conversationId': {
+      id: '/conversation/$conversationId'
+      path: '/$conversationId'
+      fullPath: '/conversation/$conversationId'
+      preLoaderRoute: typeof ConversationConversationIdRouteImport
+      parentRoute: typeof ConversationRoute
+    }
     '/api/translate': {
       id: '/api/translate'
       path: '/api/translate'
@@ -306,21 +326,35 @@ declare module '@tanstack/react-router' {
     }
     '/conversation/$conversationId/history': {
       id: '/conversation/$conversationId/history'
-      path: '/$conversationId/history'
+      path: '/history'
       fullPath: '/conversation/$conversationId/history'
       preLoaderRoute: typeof ConversationConversationIdHistoryRouteImport
-      parentRoute: typeof ConversationRoute
+      parentRoute: typeof ConversationConversationIdRoute
     }
   }
 }
 
-interface ConversationRouteChildren {
+interface ConversationConversationIdRouteChildren {
   ConversationConversationIdHistoryRoute: typeof ConversationConversationIdHistoryRoute
 }
 
+const ConversationConversationIdRouteChildren: ConversationConversationIdRouteChildren =
+  {
+    ConversationConversationIdHistoryRoute:
+      ConversationConversationIdHistoryRoute,
+  }
+
+const ConversationConversationIdRouteWithChildren =
+  ConversationConversationIdRoute._addFileChildren(
+    ConversationConversationIdRouteChildren,
+  )
+
+interface ConversationRouteChildren {
+  ConversationConversationIdRoute: typeof ConversationConversationIdRouteWithChildren
+}
+
 const ConversationRouteChildren: ConversationRouteChildren = {
-  ConversationConversationIdHistoryRoute:
-    ConversationConversationIdHistoryRoute,
+  ConversationConversationIdRoute: ConversationConversationIdRouteWithChildren,
 }
 
 const ConversationRouteWithChildren = ConversationRoute._addFileChildren(

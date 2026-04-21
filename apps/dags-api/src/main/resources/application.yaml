@@ -1,5 +1,5 @@
 chat:
-  default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e2b}}
+  default-model: ${CHAT_DEFAULT_MODEL:${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e4b}}
   prompt:
     system: >-
       ${CHAT_PROMPT_SYSTEM:You are a helpful AI assistant. Answer clearly and accurately. Keep the conversation natural. When generating code, always format it inside a markdown block with the correct language tag. Ensure there is a line break after the opening marker and before the closing marker. For example, if you write Python functions, use this exact style:
@@ -25,7 +25,7 @@ spring:
       base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://localhost:11434}
       chat:
         options:
-          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e2b}
+          model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e4b}
   application:
     name: dags-api
   datasource:

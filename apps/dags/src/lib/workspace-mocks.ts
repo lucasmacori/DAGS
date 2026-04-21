@@ -107,7 +107,7 @@ export const historyItems = [
   {
     id: 'hist-01',
     title: 'Scalable Node.js microservice conversation',
-    model: 'gemma4:e2b',
+    model: 'gemma4:e4b',
     timestamp: 'Today, 10:24 AM',
     summary: 'WebSocket architecture, Redis adapter strategy, and heartbeat design.',
     status: 'Completed',

@@ -69,7 +69,7 @@ function HistoryPage() {
 
           <section className="panel-card stat-card">
             <p className="stat-card__label">Most used model</p>
-            <p className="stat-card__value stat-card__value--small">gemma4:e2b</p>
+            <p className="stat-card__value stat-card__value--small">gemma4:e4b</p>
             <p className="stat-card__hint">Primary orchestration assistant for active workflows.</p>
           </section>
 

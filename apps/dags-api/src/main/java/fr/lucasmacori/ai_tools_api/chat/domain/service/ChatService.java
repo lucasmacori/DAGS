@@ -1,6 +1,7 @@
 package fr.lucasmacori.ai_tools_api.chat.domain.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
@@ -54,6 +55,15 @@ public class ChatService {
 		return conversationHistoryRepository.getConversationHistory(conversationId, page, DEFAULT_HISTORY_PAGE_SIZE);
 	}
 
+	public Optional<Conversation> updateConversation(String conversationId, String name) {
+		return conversationRepository.findById(conversationId)
+				.map(existing -> {
+					String nextName = name != null ? normalizeRequiredName(name) : existing.conversationName();
+					Conversation updated = new Conversation(existing.conversationId(), nextName, existing.createdAt());
+					return conversationRepository.updateConversation(updated);
+				});
+	}
+
 	private Mono<Void> persistMessage(String conversationId, ConversationMessageRole role, String content) {
 		return Mono.fromRunnable(() -> conversationHistoryRepository.addMessage(conversationId, role, content))
 				.subscribeOn(Schedulers.boundedElastic())
@@ -75,5 +85,13 @@ public class ChatService {
 		}
 
 		return defaultModel;
+	}
+
+	private String normalizeRequiredName(String value) {
+		if (value == null || value.isBlank()) {
+			throw new IllegalArgumentException("name is required");
+		}
+
+		return value.trim();
 	}
 }

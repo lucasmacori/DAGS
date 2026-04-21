@@ -5,7 +5,9 @@ type ChatComposerProps = {
   disabled: boolean
   message: string
   model: string
+  modelOptions: { value: string; label: string }[]
   onChange: (value: string) => void
+  onModelChange: (value: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
 }
 
@@ -14,7 +16,9 @@ export function ChatComposer({
   disabled,
   message,
   model,
+  modelOptions,
   onChange,
+  onModelChange,
   onSubmit,
 }: ChatComposerProps) {
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -64,7 +68,21 @@ export function ChatComposer({
         <div className="chat-composer-meta">
           <div className="chat-composer-model">
             <span className="material-symbols-outlined">auto_awesome</span>
-            <span>{model}</span>
+            <div className="source-modal__select-wrap">
+              <select
+                className="chat-composer-model__select"
+                value={model}
+                onChange={(e) => {
+                  onModelChange(e.target.value)
+                }}
+              >
+                {modelOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <span>DAGS v4.2.0-stable</span>
         </div>

@@ -3,11 +3,14 @@ package fr.lucasmacori.ai_tools_api.chat.application.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import fr.lucasmacori.ai_tools_api.chat.application.dto.ChatRequestBody;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
+import fr.lucasmacori.ai_tools_api.chat.application.dto.UpdateConversationRequestBody;
 import fr.lucasmacori.ai_tools_api.chat.domain.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -32,5 +35,19 @@ public class ChatApplicationService {
 
 	public ConversationHistoryPage getConversationHistory(String conversationId, int page) {
 		return chatService.getConversationHistory(conversationId, page);
+	}
+
+	public Conversation updateConversation(String conversationId, UpdateConversationRequestBody request) {
+		if (!request.hasUpdates()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one field must be provided");
+		}
+
+		try {
+			return chatService.updateConversation(conversationId, request.name())
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
+		}
+		catch (IllegalArgumentException exception) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+		}
 	}
 }

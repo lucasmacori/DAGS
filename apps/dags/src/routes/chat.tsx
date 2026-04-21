@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { ChatComposer } from '../components/chat/ChatComposer'
+import { ConversationRenameDialog } from '../components/chat/ConversationRenameDialog'
 import { ChatThread } from '../components/chat/ChatThread'
 import { Topbar } from '../components/layout/Topbar'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
@@ -13,7 +14,11 @@ import {
   type ConversationHistoryResponse,
 } from '../lib/chat-utils'
 
-const chatModel = 'gemma4:e2b'
+const modelOptions = [
+  { value: '', label: 'Default Model' },
+  { value: 'gemma4:e2b', label: 'gemma4:e2b' },
+  { value: 'gemma:e4b', label: 'gemma:e4b' },
+]
 
 export const Route = createFileRoute('/chat')({
   server: {
@@ -44,10 +49,13 @@ export const Route = createFileRoute('/chat')({
           model?: string
         }>
 
-        const payload = {
+        const payload: { chat_id: string; message: string; model?: string } = {
           chat_id: body.chat_id?.trim() ?? '',
           message: body.message?.trim() ?? '',
-          model: body.model?.trim() || 'gemma4:e2b',
+        }
+        
+        if (body.model?.trim()) {
+          payload.model = body.model.trim()
         }
 
         if (!payload.chat_id || !payload.message) {
@@ -95,13 +103,15 @@ export const Route = createFileRoute('/chat')({
 })
 
 function ChatPage() {
-  const { activeConversation, setActiveConversation, refreshConversations } = useConversations()
+  const { activeConversation, renameConversation, setActiveConversation, refreshConversations } = useConversations()
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<Array<ChatMessage>>([])
   const [isStartingChat, setIsStartingChat] = useState(false)
   const [isSendingMessage, setIsSendingMessage] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [chatModel, setChatModel] = useState('')
   const threadRef = useRef<HTMLDivElement | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -246,7 +256,7 @@ function ChatPage() {
         body: JSON.stringify({
           chat_id: nextChatId,
           message: nextMessage,
-          model: chatModel,
+          ...(chatModel ? { model: chatModel } : {}),
         }),
       })
 
@@ -373,9 +383,34 @@ function ChatPage() {
 
   const displayTitle = activeConversation?.conversationName || 'Conversation'
 
+  async function handleRenameConversation(nextName: string) {
+    if (!activeConversation) {
+      return
+    }
+
+    await renameConversation(activeConversation.conversationId, { name: nextName })
+  }
+
   return (
     <section className="chat-screen">
-      <Topbar title={displayTitle} pill="Gemma4:e2b" />
+      <Topbar
+        title={displayTitle}
+        pill={chatModel || 'Default Model'}
+        titleActions={
+          activeConversation ? (
+            <button
+              className="topbar__title-action"
+              type="button"
+              aria-label="Rename conversation"
+              onClick={() => {
+                setIsRenameDialogOpen(true)
+              }}
+            >
+              <span className="material-symbols-outlined">edit</span>
+            </button>
+          ) : null
+        }
+      />
 
       <ChatThread
         isLoadingHistory={isLoadingHistory}
@@ -389,13 +424,37 @@ function ChatPage() {
         disabled={isStartingChat || isSendingMessage}
         message={message}
         model={chatModel}
+        modelOptions={modelOptions}
         onChange={setMessage}
+        onModelChange={setChatModel}
         onSubmit={handleSubmit}
       />
 
       <p className="chat-disclaimer">
         {error ?? (activeConversation?.conversationId ? `Chat ID: ${activeConversation.conversationId}` : 'DAGS can make mistakes. Verify critical technical information.')}
       </p>
+
+      {activeConversation ? (
+        <ConversationRenameDialog
+          initialName={activeConversation.conversationName}
+          isOpen={isRenameDialogOpen}
+          onClose={() => {
+            setIsRenameDialogOpen(false)
+          }}
+          onSave={async (nextName) => {
+            try {
+              await handleRenameConversation(nextName)
+            } catch (caughtError) {
+              setError(
+                caughtError instanceof Error
+                  ? caughtError.message
+                  : 'Could not rename conversation.',
+              )
+              throw caughtError
+            }
+          }}
+        />
+      ) : null}
     </section>
   )
 }

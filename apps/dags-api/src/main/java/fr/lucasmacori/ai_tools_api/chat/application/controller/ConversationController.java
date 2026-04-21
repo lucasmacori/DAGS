@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import fr.lucasmacori.ai_tools_api.chat.application.dto.ConversationHistoryResponse;
 import fr.lucasmacori.ai_tools_api.chat.application.dto.CreateConversationRequestBody;
 import fr.lucasmacori.ai_tools_api.chat.application.dto.GenerateChatResponse;
+import fr.lucasmacori.ai_tools_api.chat.application.dto.UpdateConversationRequestBody;
 import fr.lucasmacori.ai_tools_api.chat.application.service.ChatApplicationService;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
 import jakarta.validation.Valid;
@@ -41,5 +43,12 @@ public class ConversationController {
 	@PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 	GenerateChatResponse createConversation(@Valid @RequestBody CreateConversationRequestBody request) {
 		return new GenerateChatResponse(applicationService.createConversation(request.name()).conversationId());
+	}
+
+	@PatchMapping(path = "/{conversationId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	Conversation updateConversation(
+			@PathVariable String conversationId,
+			@RequestBody UpdateConversationRequestBody request) {
+		return applicationService.updateConversation(conversationId, request);
 	}
 }

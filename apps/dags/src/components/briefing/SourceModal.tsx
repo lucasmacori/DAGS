@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import type { Source, SourceType } from '../../lib/briefing-types'
 
+import { AppDialog } from '../common/AppDialog'
+
 type SourceModalProps = {
   isOpen: boolean
   onClose: () => void
@@ -52,39 +54,45 @@ export function SourceModal({ isOpen, onClose, source, onSave }: SourceModalProp
   }
 
   return (
-    <div className="source-modal-overlay">
-      <div className="source-modal" role="dialog" aria-modal="true">
-        <header className="source-modal__header">
-          <h2 className="source-modal__title">{source ? 'Edit Source' : 'Connect New Source'}</h2>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
-            <span className="material-symbols-outlined">close</span>
+    <AppDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title={source ? 'Edit Source' : 'Connect New Source'}
+      footer={
+        <>
+          <button className="ghost-button" type="button" onClick={onClose} disabled={isSaving}>
+            Cancel
           </button>
-        </header>
-
-        <form onSubmit={handleSubmit} className="source-modal__form">
-          <div className="source-modal__fields">
+          <button className="primary-button" type="submit" form="source-modal-form" disabled={isSaving}>
+            {isSaving ? 'Saving...' : 'Save Source'}
+          </button>
+        </>
+      }
+    >
+      <form id="source-modal-form" onSubmit={handleSubmit} className="app-dialog__form">
+        <div className="app-dialog__fields">
             <label className="settings-input-group">
               <span>Source Type</span>
-              <div style={{ position: 'relative' }}>
+              <div className="source-modal__select-wrap">
                 <select 
-                  className="settings-input" 
+                  className="settings-input source-modal__select" 
                   value={type} 
                   onChange={(e) => {
                     setType(e.target.value as SourceType)
                   }}
-                  style={{ appearance: 'none', paddingRight: '2.5rem' }}
                 >
                   <option value="ARTICLE_URL">Article Link</option>
                   <option value="RSS_FEED">RSS Feed</option>
                   <option value="PLAIN_TEXT">Plain Text</option>
                 </select>
-                <span className="material-symbols-outlined" style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#c7c4d7' }}>expand_more</span>
+                <span className="material-symbols-outlined source-modal__select-icon">expand_more</span>
               </div>
             </label>
 
             <label className="settings-input-group">
               <span>Title</span>
               <input 
+                autoFocus
                 className="settings-input" 
                 type="text" 
                 placeholder="Enter a descriptive title" 
@@ -99,8 +107,7 @@ export function SourceModal({ isOpen, onClose, source, onSave }: SourceModalProp
               <span>Content / URL</span>
               {type === 'PLAIN_TEXT' ? (
                 <textarea 
-                  className="settings-input" 
-                  style={{ minHeight: '6rem', resize: 'vertical' }}
+                  className="settings-input source-modal__textarea" 
                   placeholder="Enter the text content..." 
                   value={content} 
                   onChange={(e) => {
@@ -123,14 +130,7 @@ export function SourceModal({ isOpen, onClose, source, onSave }: SourceModalProp
 
           {error ? <p className="translate-error-banner">{error}</p> : null}
 
-          <footer className="source-modal__footer">
-            <button className="ghost-button" type="button" onClick={onClose} disabled={isSaving}>Cancel</button>
-            <button className="primary-button" type="submit" disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save Source'}
-            </button>
-          </footer>
-        </form>
-      </div>
-    </div>
+      </form>
+    </AppDialog>
   )
 }

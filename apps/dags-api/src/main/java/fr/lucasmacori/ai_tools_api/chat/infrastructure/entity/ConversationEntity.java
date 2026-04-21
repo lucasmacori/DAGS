@@ -50,4 +50,13 @@ public class ConversationEntity implements Persistable<UUID> {
 				.isNew(true)
 				.build();
 	}
+
+	public static ConversationEntity fromExistingConversation(final Conversation conversation) {
+		return ConversationEntity.builder()
+				.conversationId(UUID.fromString(conversation.conversationId()))
+				.conversationName(conversation.conversationName())
+				.createdAt(conversation.createdAt())
+				.isNew(false)
+				.build();
+	}
 }

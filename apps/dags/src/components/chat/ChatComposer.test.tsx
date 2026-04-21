@@ -21,8 +21,10 @@ describe('ChatComposer', () => {
         composerRef={createRef()}
         disabled={false}
         message="Hello"
-        model="gemma4:e2b"
+        model="gemma4:e4b"
+        modelOptions={[{ value: 'gemma4:e4b', label: 'Gemma4:e4b' }]}
         onChange={onChange}
+        onModelChange={() => {}}
         onSubmit={onSubmit}
       />,
     )
