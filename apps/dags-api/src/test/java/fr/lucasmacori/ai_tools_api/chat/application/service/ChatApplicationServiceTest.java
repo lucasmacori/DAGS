@@ -15,6 +15,7 @@ import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessageRole;
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.service.ChatService;
@@ -28,10 +29,11 @@ class ChatApplicationServiceTest {
 		ChatGenerator generator = (chatId, systemPrompt, userMessage, model) -> Flux.just("Hello there");
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
 
-		String response = applicationService.chat(new ChatRequestBody("chat-1", "Hello", null))
+		String response = applicationService.chat(new ChatRequestBody("chat-1", "Hello", null, null))
 				.collectList()
 				.block()
 				.getFirst();
@@ -44,10 +46,11 @@ class ChatApplicationServiceTest {
 		ChatGenerator generator = (chatId, systemPrompt, userMessage, model) -> Flux.just("Hello there");
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
 		when(conversationRepository.createConversation("test"))
 				.thenReturn(new Conversation("930d7b72-4cc0-450d-9f88-a8c3abef3b87", "test", null));
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
 
 		assertNotNull(applicationService.createConversation("test"));
 	}
@@ -57,13 +60,14 @@ class ChatApplicationServiceTest {
 		ChatGenerator generator = (chatId, systemPrompt, userMessage, model) -> Flux.just("Hello there");
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
 		ConversationHistoryPage expected = new ConversationHistoryPage(
 				0,
 				20,
 				List.of(new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", LocalDateTime.now())));
 		when(historyRepository.getConversationHistory("chat-1", 0, 20)).thenReturn(expected);
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
 
 		ConversationHistoryPage result = applicationService.getConversationHistory("chat-1", 0);
 

@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.service.ChatService;
@@ -21,6 +22,7 @@ class ChatConfiguration {
 
 	private final IConversationRepository conversationRepository;
 	private final IConversationHistoryRepository conversationHistoryRepository;
+	private final IChatDocumentRepository chatDocumentRepository;
 
 	@Bean
 	ChatService chatService(ChatGenerator chatGenerator, ChatPromptProperties chatPromptProperties) {
@@ -29,7 +31,8 @@ class ChatConfiguration {
 				chatPromptProperties.defaultModel(),
 				chatPromptProperties.system(),
 				conversationRepository,
-				conversationHistoryRepository);
+				conversationHistoryRepository,
+				chatDocumentRepository);
 	}
 
 	@Bean

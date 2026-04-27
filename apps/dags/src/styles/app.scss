@@ -598,6 +598,80 @@ textarea {
   box-shadow: $shadow;
 }
 
+.chat-composer-attachments {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	padding: 0.9rem 1rem 0;
+}
+
+.chat-composer-file-input {
+	display: none;
+}
+
+.chat-document-chip {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	max-width: 100%;
+	padding: 0.55rem 0.8rem;
+	border: 1px solid rgba($outline-variant, 0.18);
+	border-radius: 0.8rem;
+	background: rgba($surface-high, 0.7);
+}
+
+.chat-document-chip--uploading {
+	opacity: 0.8;
+}
+
+.chat-document-chip__icon {
+	font-size: 1rem;
+	color: $primary-soft;
+}
+
+.chat-document-chip__content {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.chat-document-chip__name {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: $text-primary;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.chat-document-chip__meta {
+	font-size: 0.68rem;
+	color: rgba($text-secondary, 0.7);
+}
+
+.chat-document-chip__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: $text-muted;
+	cursor: pointer;
+	transition: background-color $transition, color $transition;
+
+	&:hover {
+		background: rgba($surface-highest, 0.6);
+		color: $text-primary;
+	}
+
+	.material-symbols-outlined {
+		font-size: 0.95rem;
+	}
+}
+
 .chat-composer-main {
   display: flex;
   align-items: center;
@@ -1577,6 +1651,10 @@ textarea {
     max-width: none;
     border-radius: 1.1rem;
   }
+
+	.chat-composer-attachments {
+		padding: 0.75rem 0.75rem 0;
+	}
 
   .chat-composer-main {
     align-items: flex-end;

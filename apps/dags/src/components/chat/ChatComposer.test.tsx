@@ -20,12 +20,16 @@ describe('ChatComposer', () => {
       <ChatComposer
         composerRef={createRef()}
         disabled={false}
+        isUploadingDocuments={false}
         message="Hello"
         model="gemma4:e4b"
         modelOptions={[{ value: 'gemma4:e4b', label: 'Gemma4:e4b' }]}
         onChange={onChange}
+        onDocumentsSelected={() => {}}
         onModelChange={() => {}}
+        onRemoveDocument={() => {}}
         onSubmit={onSubmit}
+        uploadedDocuments={[]}
       />,
     )
 

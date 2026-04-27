@@ -11,7 +11,7 @@ type ConversationContextType = {
 	activeConversation: Conversation | null
 	renameConversation: (conversationId: string, updates: { name?: string }) => Promise<void>
 	setActiveConversation: (c: Conversation | null) => void
-	refreshConversations: () => Promise<void>
+	refreshConversations: () => Promise<Conversation[]>
 }
 
 const ConversationContext = createContext<ConversationContextType | null>(null)
@@ -58,14 +58,17 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch('/conversation')
       if (response.ok) {
-        const data = await response.json()
+        const data = (await response.json()) as Conversation[]
         // Sort newest first
         data.sort((a: Conversation, b: Conversation) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         setConversations(data)
+			return data
       }
     } catch (err) {
       console.error('Failed to load conversations:', err)
     }
+
+		return []
   }
 
   useEffect(() => {

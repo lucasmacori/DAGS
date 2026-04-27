@@ -6,6 +6,11 @@ import { ConversationRenameDialog } from '../components/chat/ConversationRenameD
 import { ChatThread } from '../components/chat/ChatThread'
 import { Topbar } from '../components/layout/Topbar'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
+import type {
+  UploadChatDocumentsResponse,
+  UploadedChatDocument,
+} from '../lib/chat-document-types'
+import { mapUploadedChatDocumentsResponse } from '../lib/chat-document-types'
 import { useConversations } from '../lib/conversations'
 import {
   extractStreamText,
@@ -45,17 +50,27 @@ export const Route = createFileRoute('/chat')({
 
         const body = (await request.json()) as Partial<{
           chat_id: string
+          document_ids?: string[]
           message: string
           model?: string
         }>
 
-        const payload: { chat_id: string; message: string; model?: string } = {
+        const payload: {
+          chat_id: string
+          document_ids?: string[]
+          message: string
+          model?: string
+        } = {
           chat_id: body.chat_id?.trim() ?? '',
           message: body.message?.trim() ?? '',
         }
         
         if (body.model?.trim()) {
           payload.model = body.model.trim()
+        }
+
+        if (body.document_ids?.length) {
+          payload.document_ids = body.document_ids
         }
 
         if (!payload.chat_id || !payload.message) {
@@ -110,8 +125,10 @@ function ChatPage() {
   const [isSendingMessage, setIsSendingMessage] = useState(false)
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false)
+  const [isUploadingDocuments, setIsUploadingDocuments] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [chatModel, setChatModel] = useState('')
+  const [uploadedDocuments, setUploadedDocuments] = useState<UploadedChatDocument[]>([])
   const threadRef = useRef<HTMLDivElement | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -185,6 +202,82 @@ function ChatPage() {
     threadElement.scrollTop = threadElement.scrollHeight
   }, [messages, isSendingMessage])
 
+  async function handleDocumentsSelected(files: File[]) {
+    if (files.length === 0) {
+      return
+    }
+
+    setIsUploadingDocuments(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+
+      for (const file of files) {
+        formData.append('files', file)
+      }
+
+      const response = await fetch('/chat/document', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const message = (await response.text()).trim()
+        throw new Error(message || 'Could not upload document.')
+      }
+
+      const payload = (await response.json()) as UploadChatDocumentsResponse
+      const mappedDocuments = mapUploadedChatDocumentsResponse(payload)
+
+      setUploadedDocuments((currentDocuments) => [
+        ...currentDocuments,
+        ...mappedDocuments,
+      ])
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Could not upload document.',
+      )
+    } finally {
+      setIsUploadingDocuments(false)
+    }
+  }
+
+  async function handleRemoveDocument(documentId: string) {
+    try {
+      const response = await fetch(`/chat/document/${documentId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const message = (await response.text()).trim()
+        throw new Error(message || 'Could not delete document.')
+      }
+
+      setUploadedDocuments((currentDocuments) =>
+        currentDocuments.filter((document) => document.documentId !== documentId),
+      )
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Could not delete document.',
+      )
+    }
+  }
+
+  async function cleanupUploadedDocuments(documentIds: string[]) {
+    await Promise.allSettled(
+      documentIds.map((documentId) =>
+        fetch(`/chat/document/${documentId}`, {
+          method: 'DELETE',
+        }),
+      ),
+    )
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -235,10 +328,17 @@ function ChatPage() {
         const newConv = {
           conversationId: nextChatId,
           conversationName: 'Conversation',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         }
         setActiveConversation(newConv)
-        await refreshConversations()
+        const refreshedConversations = await refreshConversations()
+        const createdConversation = refreshedConversations.find(
+          (conversation) => conversation.conversationId === nextChatId,
+        )
+
+        if (createdConversation) {
+          setActiveConversation(createdConversation)
+        }
         setIsStartingChat(false)
       }
 
@@ -247,6 +347,7 @@ function ChatPage() {
         { role: 'user', text: nextMessage, timestamp: getTimestamp() },
       ])
       setMessage('')
+      const sentDocumentIds = uploadedDocuments.map((document) => document.documentId)
 
       const chatResponse = await fetch('/chat', {
         method: 'POST',
@@ -257,6 +358,7 @@ function ChatPage() {
           chat_id: nextChatId,
           message: nextMessage,
           ...(chatModel ? { model: chatModel } : {}),
+          ...(sentDocumentIds.length > 0 ? { document_ids: sentDocumentIds } : {}),
         }),
       })
 
@@ -270,6 +372,8 @@ function ChatPage() {
           ...currentMessages,
           { role: 'assistant', title: 'DAGS AI', text: '', timestamp: getTimestamp() },
         ])
+        setUploadedDocuments([])
+        await cleanupUploadedDocuments(sentDocumentIds)
         return
       }
 
@@ -369,6 +473,9 @@ function ChatPage() {
           return nextMessages
         })
       }
+
+      setUploadedDocuments([])
+      await cleanupUploadedDocuments(sentDocumentIds)
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
@@ -422,12 +529,16 @@ function ChatPage() {
       <ChatComposer
         composerRef={composerRef}
         disabled={isStartingChat || isSendingMessage}
+        isUploadingDocuments={isUploadingDocuments}
         message={message}
         model={chatModel}
         modelOptions={modelOptions}
         onChange={setMessage}
+        onDocumentsSelected={handleDocumentsSelected}
         onModelChange={setChatModel}
+        onRemoveDocument={handleRemoveDocument}
         onSubmit={handleSubmit}
+        uploadedDocuments={uploadedDocuments}
       />
 
       <p className="chat-disclaimer">

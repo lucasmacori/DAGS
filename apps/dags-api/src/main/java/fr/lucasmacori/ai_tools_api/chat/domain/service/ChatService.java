@@ -3,10 +3,12 @@ package fr.lucasmacori.ai_tools_api.chat.domain.service;
 import java.util.List;
 import java.util.Optional;
 
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatDocument;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessageRole;
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.spi.ChatGenerator;
@@ -25,6 +27,7 @@ public class ChatService {
 	private final String systemPrompt;
 	private final IConversationRepository conversationRepository;
 	private final IConversationHistoryRepository conversationHistoryRepository;
+	private final IChatDocumentRepository chatDocumentRepository;
 
 	public Flux<String> chat(ChatRequest request) {
 		return chat(request, systemPrompt);
@@ -32,10 +35,11 @@ public class ChatService {
 
 	public Flux<String> chat(ChatRequest request, String systemPrompt) {
 		StringBuilder assistantResponse = new StringBuilder();
+		String userMessage = buildUserMessage(request);
 		Flux<String> generatedResponse = chatGenerator.stream(
 				request.chatId(),
 				systemPrompt,
-				request.message(),
+				userMessage,
 				resolveModel(request))
 				.doOnNext(assistantResponse::append);
 
@@ -62,6 +66,35 @@ public class ChatService {
 					Conversation updated = new Conversation(existing.conversationId(), nextName, existing.createdAt());
 					return conversationRepository.updateConversation(updated);
 				});
+	}
+
+	private String buildUserMessage(ChatRequest request) {
+		if (request.documentIds() == null || request.documentIds().isEmpty()) {
+			return request.message();
+		}
+
+		List<ChatDocument> documents = chatDocumentRepository.findAllByIds(request.documentIds());
+		if (documents.size() != request.documentIds().size()) {
+			throw new IllegalArgumentException("One or more documents could not be found");
+		}
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("User question:\n");
+		builder.append(request.message());
+		builder.append("\n\nAttached documents:\n\n");
+
+		for (int index = 0; index < documents.size(); index++) {
+			ChatDocument document = documents.get(index);
+			builder.append("[Document ")
+					.append(index + 1)
+					.append(": ")
+					.append(document.filename())
+					.append("]\n")
+					.append(document.contentText())
+					.append("\n\n");
+		}
+
+		return builder.toString().trim();
 	}
 
 	private Mono<Void> persistMessage(String conversationId, ConversationMessageRole role, String content) {

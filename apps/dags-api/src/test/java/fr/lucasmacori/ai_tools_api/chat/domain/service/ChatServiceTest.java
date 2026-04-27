@@ -12,10 +12,12 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 
+import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatDocument;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessageRole;
+import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.spi.ChatGenerator;
@@ -28,9 +30,10 @@ class ChatServiceTest {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
-		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository);
 
-		List<String> response = service.chat(new ChatRequest(UUID.randomUUID().toString(), "Hello", null))
+		List<String> response = service.chat(new ChatRequest(UUID.randomUUID().toString(), "Hello", null, null))
 				.collectList()
 				.block();
 
@@ -48,9 +51,10 @@ class ChatServiceTest {
 		CapturingChatGenerator generator = new CapturingChatGenerator();
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
-		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
+		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository);
 
-		service.chat(new ChatRequest("chat-1", "Hello", "mistral"))
+		service.chat(new ChatRequest("chat-1", "Hello", "mistral", null))
 				.collectList()
 				.block();
 
@@ -60,15 +64,35 @@ class ChatServiceTest {
 	}
 
 	@Test
+	void chatIncludesAttachedDocumentsInPrompt() {
+		CapturingChatGenerator generator = new CapturingChatGenerator();
+		IConversationRepository conversationRepository = mock(IConversationRepository.class);
+		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
+		when(documentRepository.findAllByIds(List.of("doc-1")))
+				.thenReturn(List.of(new ChatDocument("doc-1", "notes.txt", "text/plain", "Document body", LocalDateTime.now())));
+		ChatService service = new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository);
+
+		service.chat(new ChatRequest("chat-1", "Summarize this", null, List.of("doc-1")))
+				.collectList()
+				.block();
+
+		assertTrue(generator.userMessage.contains("Attached documents:"));
+		assertTrue(generator.userMessage.contains("notes.txt"));
+		assertTrue(generator.userMessage.contains("Document body"));
+	}
+
+	@Test
 	void getConversationHistoryUsesFirstPageWithTwentyMessages() {
 		IConversationRepository conversationRepository = mock(IConversationRepository.class);
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
+		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
 		ConversationHistoryPage historyPage = new ConversationHistoryPage(
 				0,
 				20,
 				List.of(new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", LocalDateTime.now())));
 		when(historyRepository.getConversationHistory("chat-1", 0, 20)).thenReturn(historyPage);
-		ChatService service = new ChatService((chatId, systemPrompt, userMessage, model) -> Flux.just("Hi"), "default-model", "System prompt", conversationRepository, historyRepository);
+		ChatService service = new ChatService((chatId, systemPrompt, userMessage, model) -> Flux.just("Hi"), "default-model", "System prompt", conversationRepository, historyRepository, documentRepository);
 
 		ConversationHistoryPage result = service.getConversationHistory("chat-1", 0);
 

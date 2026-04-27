@@ -20,10 +20,12 @@ import { Route as ArchiveRouteImport } from './routes/archive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SourceSourceIdRouteImport } from './routes/source.$sourceId'
 import { Route as ConversationConversationIdRouteImport } from './routes/conversation.$conversationId'
+import { Route as ChatDocumentRouteImport } from './routes/chat.document'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiGenerateChatRouteImport } from './routes/api/generate-chat'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ConversationConversationIdHistoryRouteImport } from './routes/conversation.$conversationId.history'
+import { Route as ChatDocumentDocumentIdRouteImport } from './routes/chat.document.$documentId'
 
 const TranslateRoute = TranslateRouteImport.update({
   id: '/translate',
@@ -81,6 +83,11 @@ const ConversationConversationIdRoute =
     path: '/$conversationId',
     getParentRoute: () => ConversationRoute,
   } as any)
+const ChatDocumentRoute = ChatDocumentRouteImport.update({
+  id: '/document',
+  path: '/document',
+  getParentRoute: () => ChatRoute,
+} as any)
 const ApiTranslateRoute = ApiTranslateRouteImport.update({
   id: '/api/translate',
   path: '/api/translate',
@@ -102,12 +109,17 @@ const ConversationConversationIdHistoryRoute =
     path: '/history',
     getParentRoute: () => ConversationConversationIdRoute,
   } as any)
+const ChatDocumentDocumentIdRoute = ChatDocumentDocumentIdRouteImport.update({
+  id: '/$documentId',
+  path: '/$documentId',
+  getParentRoute: () => ChatDocumentRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/briefing': typeof BriefingRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
@@ -116,15 +128,17 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
+  '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/briefing': typeof BriefingRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
@@ -133,8 +147,10 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
+  '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
 export interface FileRoutesById {
@@ -142,7 +158,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
   '/briefing': typeof BriefingRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
   '/settings': typeof SettingsRoute
@@ -151,8 +167,10 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
+  '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
 }
 export interface FileRouteTypes {
@@ -170,8 +188,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
+    | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -187,8 +207,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
+    | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
   id:
     | '__root__'
@@ -204,8 +226,10 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
+    | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
   fileRoutesById: FileRoutesById
 }
@@ -213,7 +237,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
   BriefingRoute: typeof BriefingRoute
-  ChatRoute: typeof ChatRoute
+  ChatRoute: typeof ChatRouteWithChildren
   ConversationRoute: typeof ConversationRouteWithChildren
   HistoryRoute: typeof HistoryRoute
   SettingsRoute: typeof SettingsRoute
@@ -303,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConversationConversationIdRouteImport
       parentRoute: typeof ConversationRoute
     }
+    '/chat/document': {
+      id: '/chat/document'
+      path: '/document'
+      fullPath: '/chat/document'
+      preLoaderRoute: typeof ChatDocumentRouteImport
+      parentRoute: typeof ChatRoute
+    }
     '/api/translate': {
       id: '/api/translate'
       path: '/api/translate'
@@ -331,8 +362,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConversationConversationIdHistoryRouteImport
       parentRoute: typeof ConversationConversationIdRoute
     }
+    '/chat/document/$documentId': {
+      id: '/chat/document/$documentId'
+      path: '/$documentId'
+      fullPath: '/chat/document/$documentId'
+      preLoaderRoute: typeof ChatDocumentDocumentIdRouteImport
+      parentRoute: typeof ChatDocumentRoute
+    }
   }
 }
+
+interface ChatDocumentRouteChildren {
+  ChatDocumentDocumentIdRoute: typeof ChatDocumentDocumentIdRoute
+}
+
+const ChatDocumentRouteChildren: ChatDocumentRouteChildren = {
+  ChatDocumentDocumentIdRoute: ChatDocumentDocumentIdRoute,
+}
+
+const ChatDocumentRouteWithChildren = ChatDocumentRoute._addFileChildren(
+  ChatDocumentRouteChildren,
+)
+
+interface ChatRouteChildren {
+  ChatDocumentRoute: typeof ChatDocumentRouteWithChildren
+}
+
+const ChatRouteChildren: ChatRouteChildren = {
+  ChatDocumentRoute: ChatDocumentRouteWithChildren,
+}
+
+const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
 
 interface ConversationConversationIdRouteChildren {
   ConversationConversationIdHistoryRoute: typeof ConversationConversationIdHistoryRoute
@@ -376,7 +436,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
   BriefingRoute: BriefingRoute,
-  ChatRoute: ChatRoute,
+  ChatRoute: ChatRouteWithChildren,
   ConversationRoute: ConversationRouteWithChildren,
   HistoryRoute: HistoryRoute,
   SettingsRoute: SettingsRoute,
