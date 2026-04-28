@@ -41,4 +41,9 @@ public class ConversationRepository implements IConversationRepository {
 		return conversationJDBCRepository.save(ConversationEntity.fromExistingConversation(conversation))
 				.toConversation();
 	}
+
+	@Override
+	public void deleteConversation(String conversationId) {
+		conversationJDBCRepository.deleteById(UUID.fromString(conversationId));
+	}
 }

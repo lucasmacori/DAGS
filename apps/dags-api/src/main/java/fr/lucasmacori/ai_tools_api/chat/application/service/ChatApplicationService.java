@@ -54,4 +54,15 @@ public class ChatApplicationService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
 		}
 	}
+
+	public void deleteConversation(String conversationId) {
+		try {
+			if (!chatService.deleteConversation(conversationId)) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found");
+			}
+		}
+		catch (IllegalArgumentException exception) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+		}
+	}
 }

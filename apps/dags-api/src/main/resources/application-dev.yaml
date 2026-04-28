@@ -1,5 +1,9 @@
 chat:
   default-model: gemma4:e4b
+  memory:
+    provider: postgres
+  documents:
+    provider: pgvector
 
 spring:
   ai:

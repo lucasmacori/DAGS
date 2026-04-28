@@ -28,7 +28,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     select: (state) => state.location.pathname,
   })
   const navigate = useNavigate()
-  const { conversations, activeConversation, renameConversation, setActiveConversation } = useConversations()
+  const {
+    conversations,
+    activeConversation,
+    deleteConversation,
+    renameConversation,
+    setActiveConversation,
+  } = useConversations()
   const [contextMenu, setContextMenu] = useState<{
     conversationId: string
     x: number
@@ -56,6 +62,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   async function handleRenameConversation(conversationId: string, nextName: string) {
     await renameConversation(conversationId, { name: nextName })
     setContextMenu(null)
+  }
+
+  async function handleDeleteConversation(conversationId: string) {
+    const isActiveConversation = activeConversation?.conversationId === conversationId
+
+    await deleteConversation(conversationId)
+    setContextMenu(null)
+
+    if (isActiveConversation) {
+      navigate({ to: '/chat' })
+      onClose()
+    }
   }
 
   const currentUser = pathname.startsWith('/settings')
@@ -189,8 +207,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <button
                       className="briefing-card__menu-button briefing-card__menu-button--danger"
                       type="button"
-                      onClick={() => {
-                        setContextMenu(null)
+                      onClick={async () => {
+                        try {
+                          await handleDeleteConversation(conversation.conversationId)
+                        } catch (caughtError) {
+                          window.alert(
+                            caughtError instanceof Error
+                              ? caughtError.message
+                              : 'Could not delete conversation.',
+                          )
+                        }
                       }}
                     >
                       <span className="material-symbols-outlined">delete</span>

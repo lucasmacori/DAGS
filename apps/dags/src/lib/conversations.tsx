@@ -9,6 +9,7 @@ export type Conversation = {
 type ConversationContextType = {
 	conversations: Conversation[]
 	activeConversation: Conversation | null
+	deleteConversation: (conversationId: string) => Promise<void>
 	renameConversation: (conversationId: string, updates: { name?: string }) => Promise<void>
 	setActiveConversation: (c: Conversation | null) => void
 	refreshConversations: () => Promise<Conversation[]>
@@ -19,6 +20,26 @@ const ConversationContext = createContext<ConversationContextType | null>(null)
 export function ConversationProvider({ children }: { children: ReactNode }) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [activeConversation, setActiveConversation] = useState<Conversation | null>(null)
+
+	async function deleteConversation(conversationId: string) {
+		const response = await fetch(`/conversation/${conversationId}`, {
+			method: 'DELETE',
+		})
+
+		if (!response.ok) {
+			throw new Error((await response.text()).trim() || 'Failed to delete conversation.')
+		}
+
+		setConversations((currentConversations) =>
+			currentConversations.filter(
+				(conversation) => conversation.conversationId !== conversationId,
+			),
+		)
+
+		setActiveConversation((currentConversation) =>
+			currentConversation?.conversationId === conversationId ? null : currentConversation,
+		)
+	}
 
 	async function renameConversation(conversationId: string, updates: { name?: string }) {
 		const nextName = updates.name?.trim()
@@ -80,6 +101,7 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
       value={{
         conversations,
         activeConversation,
+			deleteConversation,
         renameConversation,
         setActiveConversation,
         refreshConversations,

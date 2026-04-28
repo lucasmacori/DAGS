@@ -13,6 +13,10 @@ chat:
   memory:
     provider: ${CHAT_MEMORY_PROVIDER:in-memory}
     max-messages: ${CHAT_MEMORY_MAX_MESSAGES:20}
+  documents:
+    provider: ${CHAT_DOCUMENTS_PROVIDER:in-memory}
+    max-characters: ${CHAT_DOCUMENTS_MAX_CHARACTERS:200000}
+    max-file-size-bytes: ${CHAT_DOCUMENTS_MAX_FILE_SIZE_BYTES:10485760}
 
 security:
   basic-auth:
@@ -26,6 +30,14 @@ spring:
       chat:
         options:
           model: ${SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL:gemma4:e4b}
+      embedding:
+        options:
+          model: ${SPRING_AI_OLLAMA_EMBEDDING_OPTIONS_MODEL:nomic-embed-text}
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: never
   application:
     name: dags-api
   datasource:

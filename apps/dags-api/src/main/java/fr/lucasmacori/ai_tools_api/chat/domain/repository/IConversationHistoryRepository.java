@@ -7,4 +7,6 @@ public interface IConversationHistoryRepository {
 	void addMessage(String conversationId, ConversationMessageRole role, String content);
 
 	ConversationHistoryPage getConversationHistory(String conversationId, int page, int size);
+
+	void deleteConversationHistory(String conversationId);
 }

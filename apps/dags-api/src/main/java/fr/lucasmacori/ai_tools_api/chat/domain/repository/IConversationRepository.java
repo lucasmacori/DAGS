@@ -13,4 +13,5 @@ public interface IConversationRepository {
 	List<Conversation> getConversations();
 	Optional<Conversation> findById(String conversationId);
 	Conversation updateConversation(Conversation conversation);
+	void deleteConversation(String conversationId);
 }

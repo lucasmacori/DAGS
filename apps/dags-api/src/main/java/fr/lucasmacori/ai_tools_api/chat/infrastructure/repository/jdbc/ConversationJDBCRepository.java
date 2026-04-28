@@ -15,4 +15,7 @@ public interface ConversationJDBCRepository extends ListCrudRepository<Conversat
 
 	@Override
 	<S extends ConversationEntity> S save(S entity);
+
+	@Override
+	void deleteById(UUID uuid);
 }

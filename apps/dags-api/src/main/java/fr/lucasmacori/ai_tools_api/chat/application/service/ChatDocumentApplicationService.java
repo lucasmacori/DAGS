@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatDocument;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.infrastructure.document.DocumentTextExtractor;
+import fr.lucasmacori.ai_tools_api.chat.infrastructure.config.ChatPromptProperties;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,10 +22,9 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 @RequiredArgsConstructor
 public class ChatDocumentApplicationService {
 
-	private static final long MAX_FILE_SIZE_BYTES = 10L * 1024L * 1024L;
-
 	private final IChatDocumentRepository chatDocumentRepository;
 	private final DocumentTextExtractor documentTextExtractor;
+	private final ChatPromptProperties chatPromptProperties;
 
 	public Mono<List<ChatDocument>> uploadDocuments(Flux<FilePart> files) {
 		return files.flatMap(this::storeDocument).collectList();
@@ -56,7 +56,7 @@ public class ChatDocumentApplicationService {
 						if (content.length == 0) {
 							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty"));
 						}
-						if (content.length > MAX_FILE_SIZE_BYTES) {
+						if (content.length > chatPromptProperties.maxDocumentFileSizeBytes()) {
 							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File exceeds 10MB limit"));
 						}
 
@@ -72,6 +72,10 @@ public class ChatDocumentApplicationService {
 
 						if (extractedText.isBlank()) {
 							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document contains no readable text"));
+						}
+
+						if (extractedText.length() > chatPromptProperties.maxDocumentCharacters()) {
+							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Extracted text exceeds configured character limit"));
 						}
 
 						ChatDocument document = new ChatDocument(

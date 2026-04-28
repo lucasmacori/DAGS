@@ -1,7 +1,6 @@
 package fr.lucasmacori.ai_tools_api.chat.infrastructure.document;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 

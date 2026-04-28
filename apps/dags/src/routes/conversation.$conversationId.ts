@@ -9,6 +9,54 @@ type ConversationUpdateRequest = {
 export const Route = createFileRoute('/conversation/$conversationId')({
   server: {
     handlers: {
+      DELETE: async ({ params }) => {
+        let apiBaseUrl: string
+        let authorization: string
+
+        try {
+          const config = getAiToolsApiConfig()
+          apiBaseUrl = config.apiBaseUrl
+          authorization = config.authorization
+        } catch (error) {
+          return new Response(
+            error instanceof Error ? error.message : 'API configuration is invalid.',
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+              },
+            },
+          )
+        }
+
+        const upstreamResponse = await fetch(
+          `${apiBaseUrl}/conversation/${params.conversationId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: authorization,
+            },
+          },
+        )
+
+        if (!upstreamResponse.ok) {
+          const message = await upstreamResponse.text()
+
+          return new Response(message || 'Could not delete conversation.', {
+            status: upstreamResponse.status,
+            headers: {
+              'Content-Type': 'text/plain; charset=utf-8',
+            },
+          })
+        }
+
+        return new Response(null, {
+          status: upstreamResponse.status,
+          headers: {
+            'Cache-Control': 'no-store',
+          },
+        })
+      },
       PATCH: async ({ params, request }) => {
         let apiBaseUrl: string
         let authorization: string

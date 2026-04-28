@@ -3,6 +3,8 @@ package fr.lucasmacori.ai_tools_api.chat.domain.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatDocument;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatRequest;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
@@ -66,6 +68,17 @@ public class ChatService {
 					Conversation updated = new Conversation(existing.conversationId(), nextName, existing.createdAt());
 					return conversationRepository.updateConversation(updated);
 				});
+	}
+
+	@Transactional
+	public boolean deleteConversation(String conversationId) {
+		if (conversationRepository.findById(conversationId).isEmpty()) {
+			return false;
+		}
+
+		conversationHistoryRepository.deleteConversationHistory(conversationId);
+		conversationRepository.deleteConversation(conversationId);
+		return true;
 	}
 
 	private String buildUserMessage(ChatRequest request) {

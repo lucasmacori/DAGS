@@ -69,6 +69,18 @@ public class ConversationHistoryRepository implements IConversationHistoryReposi
 		return new ConversationHistoryPage(sanitizedPage, sanitizedSize, messages);
 	}
 
+	@Override
+	public void deleteConversationHistory(String conversationId) {
+		Map<String, Object> parameters = Map.of("conversation_id", UUID.fromString(conversationId), "conversation_id_text", conversationId);
+
+		jdbcTemplate.update(
+				"DELETE FROM conversation_message WHERE conversation_id = :conversation_id",
+				parameters);
+		jdbcTemplate.update(
+				"DELETE FROM SPRING_AI_CHAT_MEMORY WHERE conversation_id = :conversation_id_text",
+				parameters);
+	}
+
 	private static final class ConversationMessageRowMapper implements RowMapper<ConversationMessage> {
 		@Override
 		public ConversationMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
