@@ -1,0 +1,11 @@
+.git
+.nx
+.opencode
+node_modules
+apps/dags/node_modules
+apps/dags/.output
+apps/dags-api/.gradle
+apps/dags-api/build
+apps/dags/build
+.DS_Store
+dist
