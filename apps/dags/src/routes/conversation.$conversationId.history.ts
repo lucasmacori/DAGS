@@ -1,18 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { authenticatedApiFetch } from '../lib/auth'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 
 export const Route = createFileRoute('/conversation/$conversationId/history')({
   server: {
     handlers: {
       GET: async ({ params, request }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -27,16 +23,11 @@ export const Route = createFileRoute('/conversation/$conversationId/history')({
 
         const requestUrl = new URL(request.url)
         const page = requestUrl.searchParams.get('page') ?? '0'
-        const upstreamUrl = new URL(
-          `${apiBaseUrl}/conversation/${params.conversationId}/history`,
-        )
+        const upstreamUrl = new URL(`http://local/conversation/${params.conversationId}/history`)
         upstreamUrl.searchParams.set('page', page)
 
-        const upstreamResponse = await fetch(upstreamUrl, {
+        const upstreamResponse = await authenticatedApiFetch(`${upstreamUrl.pathname}${upstreamUrl.search}`, {
           method: 'GET',
-          headers: {
-            Authorization: authorization,
-          },
         })
 
         if (!upstreamResponse.ok) {

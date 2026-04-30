@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { authenticatedApiFetch } from '../lib/auth'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 
 type SourceUpdateRequest = {
@@ -11,13 +12,8 @@ export const Route = createFileRoute('/source/$sourceId')({
   server: {
     handlers: {
       PATCH: async ({ request, params }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -34,10 +30,9 @@ export const Route = createFileRoute('/source/$sourceId')({
         if (body.title !== undefined) payload.title = body.title.trim()
         if (body.content !== undefined) payload.content = body.content.trim()
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/source/${params.sourceId}`, {
+        const upstreamResponse = await authenticatedApiFetch(`/source/${params.sourceId}`, {
           method: 'PATCH',
           headers: {
-            Authorization: authorization,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),
@@ -60,13 +55,8 @@ export const Route = createFileRoute('/source/$sourceId')({
         })
       },
       DELETE: async ({ params }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -77,9 +67,8 @@ export const Route = createFileRoute('/source/$sourceId')({
           )
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/source/${params.sourceId}`, {
+        const upstreamResponse = await authenticatedApiFetch(`/source/${params.sourceId}`, {
           method: 'DELETE',
-          headers: { Authorization: authorization },
         })
 
         if (!upstreamResponse.ok) {

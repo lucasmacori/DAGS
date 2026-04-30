@@ -3,15 +3,35 @@ import {
   HeadContent,
   Scripts,
   createRootRoute,
+  redirect,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { useState, type ReactNode } from 'react'
 
 import { Sidebar } from '../components/layout/Sidebar'
-import { ConversationProvider, useConversations } from '../lib/conversations'
+import { getAuthStateFn } from '../lib/auth'
+import { ConversationProvider } from '../lib/conversations'
 import appCss from '../styles/app.scss?url'
 
 export const Route = createRootRoute({
+  beforeLoad: async ({ location }) => {
+    const auth = await getAuthStateFn()
+
+    if (!auth.user && location.pathname !== '/login') {
+      throw redirect({
+        search: {
+          redirect: location.href,
+        },
+        to: '/login',
+      })
+    }
+
+    if (auth.user && location.pathname === '/login') {
+      throw redirect({ to: '/chat' })
+    }
+
+    return auth
+  },
   head: () => ({
     meta: [
       {
@@ -54,6 +74,32 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { user } = Route.useRouteContext()
+
+  if (!user) {
+    return (
+      <html lang="en">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          {children}
+          <TanStackDevtools
+            config={{
+              position: 'bottom-right',
+            }}
+            plugins={[
+              {
+                name: 'Tanstack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
+          <Scripts />
+        </body>
+      </html>
+    )
+  }
 
   return (
     <html lang="en">

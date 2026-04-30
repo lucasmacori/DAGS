@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, type FormEvent } from 'react'
 
 import { Topbar } from '../components/layout/Topbar'
+import { authenticatedApiFetch } from '../lib/auth'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 
 type LanguageOption = {
@@ -61,13 +62,8 @@ export const Route = createFileRoute('/translate')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -101,10 +97,9 @@ export const Route = createFileRoute('/translate')({
           })
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/translate`, {
+        const upstreamResponse = await authenticatedApiFetch('/translate', {
           method: 'POST',
           headers: {
-            Authorization: authorization,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),

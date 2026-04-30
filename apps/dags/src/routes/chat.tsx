@@ -5,6 +5,7 @@ import { ChatComposer } from '../components/chat/ChatComposer'
 import { ConversationRenameDialog } from '../components/chat/ConversationRenameDialog'
 import { ChatThread } from '../components/chat/ChatThread'
 import { Topbar } from '../components/layout/Topbar'
+import { authenticatedApiFetch } from '../lib/auth'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 import type {
   UploadChatDocumentsResponse,
@@ -29,13 +30,8 @@ export const Route = createFileRoute('/chat')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -82,10 +78,9 @@ export const Route = createFileRoute('/chat')({
           })
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/chat`, {
+        const upstreamResponse = await authenticatedApiFetch('/chat', {
           method: 'POST',
           headers: {
-            Authorization: authorization,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),

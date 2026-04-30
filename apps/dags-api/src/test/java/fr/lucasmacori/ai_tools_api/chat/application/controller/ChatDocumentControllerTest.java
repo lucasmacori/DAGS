@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +17,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.MultipartBodyBuilder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,13 +38,29 @@ class ChatDocumentControllerTest {
 	@Autowired
 	private WebTestClient webTestClient;
 
+	@Autowired
+	private JwtEncoder jwtEncoder;
+
 	@MockitoBean
 	private ChatDocumentApplicationService applicationService;
 
 	private WebTestClient authenticatedClient() {
 		return webTestClient.mutate()
-				.defaultHeaders(headers -> headers.setBasicAuth("ai", "completelylocal"))
+				.defaultHeaders(headers -> headers.setBearerAuth(createAccessToken()))
 				.build();
+	}
+
+	private String createAccessToken() {
+		Instant now = Instant.now();
+		return jwtEncoder.encode(JwtEncoderParameters.from(
+				JwsHeader.with(MacAlgorithm.HS256).build(),
+				JwtClaimsSet.builder()
+						.subject("user-1")
+						.claim("email", "user@example.com")
+						.issuedAt(now)
+						.expiresAt(now.plusSeconds(300))
+						.build()))
+				.getTokenValue();
 	}
 
 	@Test

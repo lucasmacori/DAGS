@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TranslateRouteImport } from './routes/translate'
 import { Route as SourceRouteImport } from './routes/source'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as ConversationRouteImport } from './routes/conversation'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -40,6 +41,11 @@ const SourceRoute = SourceRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
+  '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/source': typeof SourceRouteWithChildren
   '/translate': typeof TranslateRoute
@@ -141,6 +148,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
+  '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/source': typeof SourceRouteWithChildren
   '/translate': typeof TranslateRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
+  '/login': typeof LoginRoute
   '/settings': typeof SettingsRoute
   '/source': typeof SourceRouteWithChildren
   '/translate': typeof TranslateRoute
@@ -182,6 +191,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/conversation'
     | '/history'
+    | '/login'
     | '/settings'
     | '/source'
     | '/translate'
@@ -201,6 +211,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/conversation'
     | '/history'
+    | '/login'
     | '/settings'
     | '/source'
     | '/translate'
@@ -220,6 +231,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/conversation'
     | '/history'
+    | '/login'
     | '/settings'
     | '/source'
     | '/translate'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRouteWithChildren
   ConversationRoute: typeof ConversationRouteWithChildren
   HistoryRoute: typeof HistoryRoute
+  LoginRoute: typeof LoginRoute
   SettingsRoute: typeof SettingsRoute
   SourceRoute: typeof SourceRouteWithChildren
   TranslateRoute: typeof TranslateRoute
@@ -269,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -439,6 +459,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRouteWithChildren,
   ConversationRoute: ConversationRouteWithChildren,
   HistoryRoute: HistoryRoute,
+  LoginRoute: LoginRoute,
   SettingsRoute: SettingsRoute,
   SourceRoute: SourceRouteWithChildren,
   TranslateRoute: TranslateRoute,

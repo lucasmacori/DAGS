@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { authenticatedApiFetch } from '../lib/auth'
 import { getAiToolsApiConfig } from '../lib/ai-tools-api'
 
 type SourceCreateRequest = {
@@ -11,13 +12,8 @@ export const Route = createFileRoute('/source')({
   server: {
     handlers: {
       GET: async () => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -28,9 +24,8 @@ export const Route = createFileRoute('/source')({
           )
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/source`, {
+        const upstreamResponse = await authenticatedApiFetch('/source', {
           method: 'GET',
-          headers: { Authorization: authorization },
         })
 
         if (!upstreamResponse.ok) {
@@ -50,13 +45,8 @@ export const Route = createFileRoute('/source')({
         })
       },
       POST: async ({ request }) => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -81,10 +71,9 @@ export const Route = createFileRoute('/source')({
           })
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/source`, {
+        const upstreamResponse = await authenticatedApiFetch('/source', {
           method: 'POST',
           headers: {
-            Authorization: authorization,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(payload),

@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { ConversationRenameDialog } from '../chat/ConversationRenameDialog'
+import { logoutFn } from '../../lib/auth'
 import { useConversations } from '../../lib/conversations'
-import { sidebarUsers } from '../../lib/workspace-mocks'
+import { Route as RootRoute } from '../../routes/__root'
 
 const navigationItems = [
   { to: '/chat', label: 'Chat', icon: 'forum' },
@@ -76,13 +77,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   }
 
-  const currentUser = pathname.startsWith('/settings')
-    ? sidebarUsers.settings
-    : pathname.startsWith('/translate')
-      ? sidebarUsers.translate
-      : pathname.startsWith('/briefing')
-        ? sidebarUsers.briefing
-        : sidebarUsers.chat
+  async function handleLogout() {
+    await logoutFn()
+    setActiveConversation(null)
+    await navigate({ to: '/login' })
+  }
+
+  const { user } = RootRoute.useRouteContext()
 
   return (
     <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
@@ -157,16 +158,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <div className="sidebar__profile">
           <div className="sidebar__avatar-frame">
-            <img
-              className="sidebar__avatar-image"
-              src={currentUser.avatar}
-              alt="Workspace profile avatar"
-            />
+            <span className="material-symbols-outlined sidebar__avatar-icon">person</span>
           </div>
-          <div>
-            <p className="sidebar__profile-name">{currentUser.name}</p>
-            <p className="sidebar__profile-plan">{currentUser.role}</p>
+          <div className="sidebar__profile-text">
+            <p className="sidebar__profile-name" title={user?.email}>{user?.email}</p>
+            <p className="sidebar__profile-plan">Workspace Member</p>
           </div>
+          
+          <button
+            className="icon-button sidebar__logout-button"
+            type="button"
+            title="Sign out"
+            aria-label="Sign out"
+            onClick={() => {
+              void handleLogout()
+            }}
+          >
+            <span className="material-symbols-outlined">logout</span>
+          </button>
         </div>
       </div>
 

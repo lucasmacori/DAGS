@@ -5,6 +5,10 @@ chat:
   documents:
     provider: pgvector
 
+security:
+  auth:
+    registration-enabled: true
+
 spring:
   ai:
     ollama:

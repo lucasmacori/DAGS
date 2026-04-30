@@ -1,17 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { authenticatedApiFetch } from '../../lib/auth'
 import { getAiToolsApiConfig } from '../../lib/ai-tools-api'
 
 export const Route = createFileRoute('/api/generate-chat')({
   server: {
     handlers: {
       POST: async () => {
-        let apiBaseUrl: string
-        let authorization: string
-
         try {
-          const config = getAiToolsApiConfig()
-          apiBaseUrl = config.apiBaseUrl
-          authorization = config.authorization
+          getAiToolsApiConfig()
         } catch (error) {
           return new Response(
             error instanceof Error ? error.message : 'API configuration is invalid.',
@@ -24,11 +20,8 @@ export const Route = createFileRoute('/api/generate-chat')({
           )
         }
 
-        const upstreamResponse = await fetch(`${apiBaseUrl}/generate-chat`, {
+        const upstreamResponse = await authenticatedApiFetch('/generate-chat', {
           method: 'POST',
-          headers: {
-            Authorization: authorization,
-          },
         })
 
         if (!upstreamResponse.ok) {

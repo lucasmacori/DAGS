@@ -87,6 +87,118 @@ textarea {
   background: $surface;
 }
 
+.auth-screen {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:
+    radial-gradient(circle at top, rgba($primary-strong, 0.22), transparent 32%),
+    linear-gradient(180deg, $surface-lowest 0%, $surface 100%);
+}
+
+.auth-card {
+  width: min(100%, 28rem);
+  padding: 2rem;
+  border: 1px solid rgba($outline-variant, 0.5);
+  border-radius: 1.25rem;
+  background: rgba($surface-main, 0.96);
+  box-shadow: $shadow;
+}
+
+.auth-card__eyebrow {
+  color: $primary;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.auth-card__title {
+  margin: 0.75rem 0 0;
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.auth-card__description {
+  margin: 0.85rem 0 0;
+  color: rgba($text-secondary, 0.82);
+  line-height: 1.5;
+}
+
+.auth-card__mode-switch {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: rgba($surface-high, 0.8);
+}
+
+.auth-card__mode-button {
+  flex: 1;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 0.7rem 1rem;
+  color: rgba($text-secondary, 0.8);
+  cursor: pointer;
+  transition: background $transition, color $transition;
+}
+
+.auth-card__mode-button--active {
+  background: $primary;
+  color: $primary-text;
+  font-weight: 700;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.auth-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: $text-secondary;
+  font-size: 0.95rem;
+}
+
+.auth-form__input {
+  border: 1px solid rgba($outline-variant, 0.6);
+  border-radius: 0.9rem;
+  background: rgba($surface-lowest, 0.8);
+  padding: 0.9rem 1rem;
+  color: $text-primary;
+}
+
+.auth-form__input:focus {
+  outline: 2px solid rgba($primary-soft, 0.45);
+  outline-offset: 2px;
+}
+
+.auth-form__error {
+  margin: 0;
+  color: $danger;
+  line-height: 1.4;
+}
+
+.auth-form__hint {
+  margin: 0;
+  color: rgba($text-secondary, 0.72);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.auth-form__submit {
+  width: 100%;
+  justify-content: center;
+}
+
 .sidebar-toggle,
 .sidebar-backdrop {
   display: none;
@@ -198,38 +310,70 @@ textarea {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding: 0 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid rgba($outline-variant, 0.2);
+  border-radius: 0.75rem;
+  background: rgba($surface-main, 0.4);
 }
 
 .sidebar__avatar-frame {
   display: flex;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba($primary-strong, 0.2);
+  background: rgba($primary-strong, 0.15);
+  color: $primary;
 }
 
-.sidebar__avatar-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.sidebar__avatar-icon {
+  font-size: 1.25rem;
+}
+
+.sidebar__profile-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+  gap: 0.125rem;
 }
 
 .sidebar__profile-name {
   margin: 0;
   color: $text-primary;
-  font-size: 0.875rem;
-  font-weight: 700;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar__profile-plan {
   margin: 0;
-  color: $text-muted;
-  font-size: 0.75rem;
+  color: rgba($text-secondary, 0.7);
+  font-size: 0.6875rem;
+}
+
+.sidebar__logout-button {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.375rem;
+  color: rgba($text-secondary, 0.7);
+  transition: background $transition, color $transition;
+}
+
+.sidebar__logout-button:hover {
+  background: rgba($danger, 0.15);
+  color: $danger;
+}
+
+.sidebar__logout-button .material-symbols-outlined {
+  font-size: 1.125rem;
 }
 
 .sidebar__link {
