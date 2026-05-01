@@ -1,7 +1,6 @@
 package fr.lucasmacori.ai_tools_api.chat.application.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -90,6 +89,8 @@ class ChatDocumentControllerTest {
 
 	@Test
 	void deleteDocumentReturnsNoContent() {
+		when(applicationService.deleteDocument("doc-1")).thenReturn(Mono.empty());
+
 		authenticatedClient().delete()
 				.uri("/api/v1/chat/document/doc-1")
 				.exchange()
@@ -98,9 +99,8 @@ class ChatDocumentControllerTest {
 
 	@Test
 	void deleteDocumentReturnsNotFoundWhenMissing() {
-		doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"))
-				.when(applicationService)
-				.deleteDocument("doc-1");
+		when(applicationService.deleteDocument("doc-1"))
+				.thenReturn(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found")));
 
 		authenticatedClient().delete()
 				.uri("/api/v1/chat/document/doc-1")

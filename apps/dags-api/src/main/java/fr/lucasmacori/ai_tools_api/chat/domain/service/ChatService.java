@@ -36,17 +36,20 @@ public class ChatService {
 	}
 
 	public Flux<String> chat(ChatRequest request, String systemPrompt) {
-		StringBuilder assistantResponse = new StringBuilder();
-		String userMessage = buildUserMessage(request);
-		Flux<String> generatedResponse = chatGenerator.stream(
-				request.chatId(),
-				systemPrompt,
-				userMessage,
-				resolveModel(request))
-				.doOnNext(assistantResponse::append);
+		return Mono.fromCallable(() -> buildUserMessage(request))
+				.subscribeOn(Schedulers.boundedElastic())
+				.flatMapMany(userMessage -> {
+					StringBuilder assistantResponse = new StringBuilder();
+					Flux<String> generatedResponse = chatGenerator.stream(
+							request.chatId(),
+							systemPrompt,
+							userMessage,
+							resolveModel(request))
+							.doOnNext(assistantResponse::append);
 
-		return persistMessage(request.chatId(), ConversationMessageRole.USER, request.message())
-				.thenMany(generatedResponse.concatWith(Mono.defer(() -> persistAssistantMessage(request.chatId(), assistantResponse).then(Mono.empty()))));
+					return persistMessage(request.chatId(), ConversationMessageRole.USER, request.message())
+							.thenMany(generatedResponse.concatWith(Mono.defer(() -> persistAssistantMessage(request.chatId(), assistantResponse).then(Mono.empty()))));
+				});
 	}
 
 	public List<Conversation> getConversations() {

@@ -30,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 class ChatConfiguration {
 
+	private static final int CHAT_DOCUMENT_EMBEDDING_DIMENSIONS = 768;
+
 	private final IConversationRepository conversationRepository;
 	private final IConversationHistoryRepository conversationHistoryRepository;
 
@@ -95,6 +97,7 @@ class ChatConfiguration {
 	@ConditionalOnProperty(prefix = "chat.documents", name = "provider", havingValue = "pgvector")
 	VectorStore chatDocumentVectorStore(JdbcTemplate jdbcTemplate, EmbeddingModel embeddingModel) {
 		return PgVectorStore.builder(jdbcTemplate, embeddingModel)
+				.dimensions(CHAT_DOCUMENT_EMBEDDING_DIMENSIONS)
 				.vectorTableName("chat_document_vector_store")
 				.schemaName("public")
 				.initializeSchema(true)

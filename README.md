@@ -1,5 +1,23 @@
 # DAGS
 
+![DAGS AI conversation preview](images/conversation.png)
+
+## Your Private AI Workspace
+
+DAGS is a personal AI assistant you can run yourself. It gives you a clean chat experience where you can ask questions, upload documents, summarize content, generate translations, and keep useful conversations in one place.
+
+Instead of sending every interaction to a hosted service you do not control, DAGS is designed to bundle the app, the API, and the database together so you can launch a complete AI workspace from a single deployment. Bring your own local Ollama models, create an account, and start using AI on your own terms.
+
+What it helps you do:
+
+- Chat with an AI assistant through a focused web interface
+- Upload documents and ask for summaries or explanations
+- Translate and rework text without leaving the app
+- Keep conversation context backed by a local database
+- Run the whole stack in one container for easier self-hosting
+
+## Technical Overview
+
 DAGS packages three services into one deployment image:
 
 - `dags` front-end (TanStack Start)

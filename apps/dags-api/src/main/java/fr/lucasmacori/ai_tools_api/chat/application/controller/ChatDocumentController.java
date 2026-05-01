@@ -32,7 +32,7 @@ class ChatDocumentController {
 
 	@DeleteMapping(path = "/{documentId}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	void deleteDocument(@PathVariable String documentId) {
-		applicationService.deleteDocument(documentId);
+	Mono<Void> deleteDocument(@PathVariable String documentId) {
+		return applicationService.deleteDocument(documentId);
 	}
 }

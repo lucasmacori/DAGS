@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ChatDocument;
@@ -27,8 +27,10 @@ public class PgVectorChatDocumentRepository implements IChatDocumentRepository {
 	private static final String METADATA_DOCUMENT_ID = "documentId";
 	private static final String METADATA_FILENAME = "filename";
 	private static final String METADATA_MEDIA_TYPE = "mediaType";
+	private static final String TABLE_NAME = "public.chat_document_vector_store";
 
 	private final VectorStore vectorStore;
+	private final JdbcTemplate jdbcTemplate;
 
 	@Override
 	public ChatDocument save(ChatDocument document) {
@@ -52,19 +54,30 @@ public class PgVectorChatDocumentRepository implements IChatDocumentRepository {
 			return Optional.empty();
 		}
 
-		FilterExpressionBuilder filterExpressionBuilder = new FilterExpressionBuilder();
-		List<Document> documents = vectorStore.similaritySearch(SearchRequest.builder()
-				.query(QUERY_PLACEHOLDER)
-				.topK(1)
-				.similarityThresholdAll()
-				.filterExpression(filterExpressionBuilder.eq(METADATA_DOCUMENT_ID, documentId).build())
-				.build());
-
-		if (documents.isEmpty()) {
+		UUID id = parseDocumentId(documentId);
+		if (id == null) {
 			return Optional.empty();
 		}
 
-		return Optional.of(toChatDocument(documents.getFirst()));
+		List<ChatDocument> documents = jdbcTemplate.query("""
+				SELECT
+					id::text AS document_id,
+					content,
+					metadata->>'filename' AS filename,
+					metadata->>'mediaType' AS media_type,
+					metadata->>'createdAt' AS created_at
+				FROM %s
+				WHERE id = ?
+				""".formatted(TABLE_NAME),
+				(resultSet, rowNumber) -> new ChatDocument(
+						resultSet.getString("document_id"),
+						resultSet.getString("filename"),
+						resultSet.getString("media_type"),
+						resultSet.getString("content"),
+						LocalDateTime.parse(resultSet.getString("created_at"))),
+					id);
+
+		return documents.stream().findFirst();
 	}
 
 	@Override
@@ -87,18 +100,20 @@ public class PgVectorChatDocumentRepository implements IChatDocumentRepository {
 			return false;
 		}
 
-		vectorStore.delete(documentId);
-		return true;
+		UUID id = parseDocumentId(documentId);
+		if (id == null) {
+			return false;
+		}
+
+		return jdbcTemplate.update("DELETE FROM " + TABLE_NAME + " WHERE id = ?", id) > 0;
 	}
 
-	private ChatDocument toChatDocument(Document document) {
-		Map<String, Object> metadata = document.getMetadata();
-		String createdAtRaw = String.valueOf(metadata.getOrDefault(METADATA_CREATED_AT, LocalDateTime.now().toString()));
-		return new ChatDocument(
-				String.valueOf(metadata.getOrDefault(METADATA_DOCUMENT_ID, document.getId())),
-				String.valueOf(metadata.getOrDefault(METADATA_FILENAME, document.getId())),
-				String.valueOf(metadata.getOrDefault(METADATA_MEDIA_TYPE, "application/octet-stream")),
-				document.getText(),
-				LocalDateTime.parse(createdAtRaw));
+	private UUID parseDocumentId(String documentId) {
+		try {
+			return UUID.fromString(documentId);
+		} catch (IllegalArgumentException exception) {
+			return null;
+		}
 	}
+
 }

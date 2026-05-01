@@ -16,6 +16,7 @@ import fr.lucasmacori.ai_tools_api.chat.infrastructure.config.ChatPromptProperti
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import org.springframework.core.io.buffer.DataBufferUtils;
 
 @Service
@@ -30,10 +31,14 @@ public class ChatDocumentApplicationService {
 		return files.flatMap(this::storeDocument).collectList();
 	}
 
-	public void deleteDocument(String documentId) {
-		if (!chatDocumentRepository.deleteById(documentId)) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
-		}
+	public Mono<Void> deleteDocument(String documentId) {
+		return Mono.fromRunnable(() -> {
+			if (!chatDocumentRepository.deleteById(documentId)) {
+				throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found");
+			}
+		})
+				.subscribeOn(Schedulers.boundedElastic())
+				.then();
 	}
 
 	private Mono<ChatDocument> storeDocument(FilePart filePart) {
@@ -50,44 +55,52 @@ public class ChatDocumentApplicationService {
 
 		return DataBufferUtils.join(filePart.content())
 				.flatMap(dataBuffer -> {
+					byte[] content;
 					try {
-						byte[] content = new byte[dataBuffer.readableByteCount()];
+						content = new byte[dataBuffer.readableByteCount()];
 						dataBuffer.read(content);
-						if (content.length == 0) {
-							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty"));
-						}
-						if (content.length > chatPromptProperties.maxDocumentFileSizeBytes()) {
-							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File exceeds 10MB limit"));
-						}
-
-						String mediaType = filePart.headers().getContentType() != null
-								? filePart.headers().getContentType().toString()
-								: "application/octet-stream";
-						String extractedText;
-						try {
-							extractedText = documentTextExtractor.extractText(filename, mediaType, content);
-						} catch (IllegalArgumentException exception) {
-							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception));
-						}
-
-						if (extractedText.isBlank()) {
-							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document contains no readable text"));
-						}
-
-						if (extractedText.length() > chatPromptProperties.maxDocumentCharacters()) {
-							return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Extracted text exceeds configured character limit"));
-						}
-
-						ChatDocument document = new ChatDocument(
-								UUID.randomUUID().toString(),
-								filename,
-								mediaType,
-								extractedText,
-								LocalDateTime.now());
-						return Mono.just(chatDocumentRepository.save(document));
 					} finally {
 						DataBufferUtils.release(dataBuffer);
 					}
+
+					String mediaType = filePart.headers().getContentType() != null
+							? filePart.headers().getContentType().toString()
+							: "application/octet-stream";
+
+					return Mono.fromCallable(() -> createAndSaveDocument(filename, mediaType, content))
+							.subscribeOn(Schedulers.boundedElastic());
 				});
+	}
+
+	private ChatDocument createAndSaveDocument(String filename, String mediaType, byte[] content) {
+		if (content.length == 0) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File is empty");
+		}
+		if (content.length > chatPromptProperties.maxDocumentFileSizeBytes()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File exceeds 10MB limit");
+		}
+
+		String extractedText;
+		try {
+			extractedText = documentTextExtractor.extractText(filename, mediaType, content);
+		} catch (IllegalArgumentException exception) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);
+		}
+
+		if (extractedText.isBlank()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Document contains no readable text");
+		}
+
+		if (extractedText.length() > chatPromptProperties.maxDocumentCharacters()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Extracted text exceeds configured character limit");
+		}
+
+		ChatDocument document = new ChatDocument(
+				UUID.randomUUID().toString(),
+				filename,
+				mediaType,
+				extractedText,
+				LocalDateTime.now());
+		return chatDocumentRepository.save(document);
 	}
 }

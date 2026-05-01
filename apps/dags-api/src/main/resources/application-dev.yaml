@@ -1,5 +1,5 @@
 chat:
-  default-model: gemma4:e4b
+  default-model: gemma4:e2b
   memory:
     provider: postgres
   documents:
@@ -12,10 +12,10 @@ security:
 spring:
   ai:
     ollama:
-      base-url: http://192.168.0.13:11434
+      base-url: http://192.168.0.7:11434
       chat:
         options:
-          model: gemma4:e4b
+          model: gemma4:e2b
   datasource:
     url: "jdbc:postgresql://localhost:5432/dags"
     username: "dags"
