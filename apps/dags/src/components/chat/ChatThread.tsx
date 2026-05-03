@@ -4,11 +4,13 @@ import type { ChatMessage } from '../../lib/chat-utils'
 import { parseMessageContent } from '../../lib/chat-utils'
 import { CodeCard } from './CodeCard'
 import { ConversationHistorySkeleton } from './ConversationHistorySkeleton'
+import { MarkdownContent } from './MarkdownContent'
 
 type ChatThreadProps = {
   isLoadingHistory: boolean
   isSendingMessage: boolean
   messages: Array<ChatMessage>
+  onScroll?: () => void
   threadRef: RefObject<HTMLDivElement | null>
 }
 
@@ -16,10 +18,16 @@ export function ChatThread({
   isLoadingHistory,
   isSendingMessage,
   messages,
+  onScroll,
   threadRef,
 }: ChatThreadProps) {
   return (
-    <div ref={threadRef} className="chat-thread" aria-label="Chat messages">
+    <div
+      ref={threadRef}
+      className="chat-thread"
+      aria-label="Chat messages"
+      onScroll={onScroll}
+    >
       {isLoadingHistory ? <ConversationHistorySkeleton /> : null}
 
       {messages.map((messageItem, index) => (
@@ -37,9 +45,7 @@ export function ChatThread({
               <div className="chat-assistant-bubble">
                 {parseMessageContent(messageItem.text).map((block, blockIndex) =>
                   block.type === 'text' ? (
-                    <p key={blockIndex} className="chat-bubble__text">
-                      {block.content}
-                    </p>
+                    <MarkdownContent key={blockIndex} content={block.content} />
                   ) : (
                     <CodeCard key={blockIndex} title={block.language} code={block.content} />
                   ),

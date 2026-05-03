@@ -25,6 +25,19 @@ export type ConversationHistoryResponse = {
   }>
 }
 
+type ScrollPosition = {
+  clientHeight: number
+  scrollHeight: number
+  scrollTop: number
+}
+
+export function isScrolledNearBottom(scrollPosition: ScrollPosition, threshold = 80) {
+  return (
+    scrollPosition.scrollHeight - scrollPosition.scrollTop - scrollPosition.clientHeight <=
+    threshold
+  )
+}
+
 export function extractStreamText(buffer: string) {
   const normalizedBuffer = buffer.replace(/\r\n/g, '\n')
   const events = normalizedBuffer.split('\n\n')

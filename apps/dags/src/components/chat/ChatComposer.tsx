@@ -17,6 +17,20 @@ type ChatComposerProps = {
   uploadedDocuments: UploadedChatDocument[]
 }
 
+const maxComposerInputHeight = 128
+const minComposerInputHeight = 24
+const appVersion = import.meta.env.VITE_APP_VERSION
+
+function resizeComposerInput(composerElement: HTMLTextAreaElement) {
+  composerElement.style.height = 'auto'
+  composerElement.style.height = `${Math.max(
+    Math.min(composerElement.scrollHeight, maxComposerInputHeight),
+    minComposerInputHeight,
+  )}px`
+  composerElement.style.overflowY =
+    composerElement.scrollHeight > maxComposerInputHeight ? 'auto' : 'hidden'
+}
+
 export function ChatComposer({
   composerRef,
   disabled,
@@ -110,13 +124,21 @@ export function ChatComposer({
           </button>
 
           <textarea
-            ref={composerRef}
+            ref={(element) => {
+              ;(composerRef as { current: HTMLTextAreaElement | null }).current = element
+
+              if (element) {
+                resizeComposerInput(element)
+              }
+            }}
             className="chat-composer-input"
             aria-label="Chat message"
             placeholder="Message DAGS..."
+            rows={1}
             value={message}
             onKeyDown={handleComposerKeyDown}
             onChange={(event) => {
+              resizeComposerInput(event.currentTarget)
               onChange(event.target.value)
             }}
           />
@@ -155,7 +177,7 @@ export function ChatComposer({
               </select>
             </div>
           </div>
-          <span>DAGS v4.2.0-stable</span>
+          <span>DAGS v{appVersion}</span>
         </div>
       </form>
     </footer>

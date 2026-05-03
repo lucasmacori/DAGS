@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   extractStreamText,
+  isScrolledNearBottom,
   mapConversationHistoryMessages,
   parseMessageContent,
 } from './chat-utils'
@@ -24,6 +25,15 @@ describe('chat utils', () => {
       { type: 'code', language: 'python', content: 'print("hi")' },
       { type: 'text', content: '\nDone' },
     ])
+  })
+
+  it('detects when a scroll container is close enough to the bottom', () => {
+    expect(
+      isScrolledNearBottom({ clientHeight: 100, scrollHeight: 500, scrollTop: 320 }),
+    ).toBe(true)
+    expect(
+      isScrolledNearBottom({ clientHeight: 100, scrollHeight: 500, scrollTop: 200 }),
+    ).toBe(false)
   })
 
   it('maps conversation history to oldest-first chat messages', () => {

@@ -15,6 +15,7 @@ import { mapUploadedChatDocumentsResponse } from '../lib/chat-document-types'
 import { useConversations } from '../lib/conversations'
 import {
   extractStreamText,
+  isScrolledNearBottom,
   mapConversationHistoryMessages,
   type ChatMessage,
   type ConversationHistoryResponse,
@@ -125,6 +126,7 @@ function ChatPage() {
   const [chatModel, setChatModel] = useState('')
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedChatDocument[]>([])
   const threadRef = useRef<HTMLDivElement | null>(null)
+  const shouldPinThreadToBottomRef = useRef(true)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
 
   function getTimestamp() {
@@ -188,14 +190,32 @@ function ChatPage() {
   }, [activeConversation])
 
   useEffect(() => {
+    shouldPinThreadToBottomRef.current = true
+  }, [activeConversation?.conversationId])
+
+  useEffect(() => {
     const threadElement = threadRef.current
 
     if (!threadElement) {
       return
     }
 
+    if (!shouldPinThreadToBottomRef.current) {
+      return
+    }
+
     threadElement.scrollTop = threadElement.scrollHeight
   }, [messages, isSendingMessage])
+
+  function handleThreadScroll() {
+    const threadElement = threadRef.current
+
+    if (!threadElement) {
+      return
+    }
+
+    shouldPinThreadToBottomRef.current = isScrolledNearBottom(threadElement)
+  }
 
   async function handleDocumentsSelected(files: File[]) {
     if (files.length === 0) {
@@ -518,6 +538,7 @@ function ChatPage() {
         isLoadingHistory={isLoadingHistory}
         isSendingMessage={isSendingMessage}
         messages={messages}
+        onScroll={handleThreadScroll}
         threadRef={threadRef}
       />
 

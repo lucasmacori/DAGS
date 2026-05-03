@@ -657,6 +657,86 @@ textarea {
   white-space: pre-wrap;
 }
 
+.chat-markdown {
+  color: $text-primary;
+}
+
+.chat-markdown > * + * {
+  margin-top: 0.75rem;
+}
+
+.chat-markdown__heading {
+  margin: 0;
+  color: $text-primary;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.chat-markdown__list {
+  margin: 0;
+  padding-left: 1.35rem;
+}
+
+.chat-markdown__list-item {
+  margin: 0.25rem 0;
+}
+
+.chat-markdown__blockquote {
+  margin: 0;
+  border-left: 3px solid rgba($primary, 0.55);
+  padding-left: 1rem;
+  color: $text-secondary;
+}
+
+.chat-markdown__code,
+.chat-markdown__pre {
+  border-radius: 0.5rem;
+  background: $surface-low;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.chat-markdown__code {
+  padding: 0.125rem 0.35rem;
+  font-size: 0.875em;
+}
+
+.chat-markdown__pre {
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.875rem 1rem;
+}
+
+.chat-markdown__pre .chat-markdown__code {
+  padding: 0;
+  background: transparent;
+}
+
+.chat-markdown__table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.chat-markdown__table th,
+.chat-markdown__table td {
+  border: 1px solid rgba($outline-variant, 0.24);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.chat-markdown__table th {
+  background: $surface-high;
+  font-weight: 700;
+}
+
+.chat-markdown a {
+  color: $primary;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .chat-user-time,
 .chat-assistant-meta {
   color: rgba($text-secondary, 0.6);
@@ -818,13 +898,12 @@ textarea {
 
 .chat-composer-main {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
 }
 
 .chat-composer-input {
-  height: 1.5rem;
   min-height: 1.5rem;
   max-height: 8rem;
   flex: 1;
@@ -836,6 +915,8 @@ textarea {
   padding: 0;
   margin-top: 0.625rem;
   margin-bottom: 0.625rem;
+  overflow-y: hidden;
+  resize: none;
 }
 
 .chat-composer-input::placeholder {
