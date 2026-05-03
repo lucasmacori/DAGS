@@ -10,5 +10,6 @@ public record ChatRequestBody(
 		@JsonProperty("chat_id") @NotBlank String chatId,
 		@JsonProperty("message") @NotBlank String message,
 		@JsonProperty("model") String model,
-		@JsonProperty("document_ids") List<String> documentIds) {
+		@JsonProperty("document_ids") List<String> documentIds,
+		@JsonProperty("web_search") Boolean webSearch) {
 }

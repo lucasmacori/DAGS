@@ -24,7 +24,7 @@ import {
 const modelOptions = [
   { value: '', label: 'Default Model' },
   { value: 'gemma4:e2b', label: 'gemma4:e2b' },
-  { value: 'gemma:e4b', label: 'gemma:e4b' },
+  { value: 'gemma4:e4b', label: 'gemma4:e4b' },
 ]
 
 export const Route = createFileRoute('/chat')({
@@ -50,6 +50,7 @@ export const Route = createFileRoute('/chat')({
           document_ids?: string[]
           message: string
           model?: string
+          web_search?: boolean
         }>
 
         const payload: {
@@ -57,6 +58,7 @@ export const Route = createFileRoute('/chat')({
           document_ids?: string[]
           message: string
           model?: string
+          web_search?: boolean
         } = {
           chat_id: body.chat_id?.trim() ?? '',
           message: body.message?.trim() ?? '',
@@ -68,6 +70,10 @@ export const Route = createFileRoute('/chat')({
 
         if (body.document_ids?.length) {
           payload.document_ids = body.document_ids
+        }
+
+        if (body.web_search === true) {
+          payload.web_search = true
         }
 
         if (!payload.chat_id || !payload.message) {
@@ -124,6 +130,7 @@ function ChatPage() {
   const [isUploadingDocuments, setIsUploadingDocuments] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [chatModel, setChatModel] = useState('')
+  const [webSearch, setWebSearch] = useState(false)
   const [uploadedDocuments, setUploadedDocuments] = useState<UploadedChatDocument[]>([])
   const threadRef = useRef<HTMLDivElement | null>(null)
   const shouldPinThreadToBottomRef = useRef(true)
@@ -374,6 +381,7 @@ function ChatPage() {
           message: nextMessage,
           ...(chatModel ? { model: chatModel } : {}),
           ...(sentDocumentIds.length > 0 ? { document_ids: sentDocumentIds } : {}),
+          ...(webSearch ? { web_search: true } : {}),
         }),
       })
 
@@ -395,6 +403,7 @@ function ChatPage() {
       const reader = chatResponse.body.getReader()
       const decoder = new TextDecoder()
       let assistantText = ''
+      let assistantSources: ChatMessage['sources'] = []
       let hasAddedAssistantMessage = false
       let chunkBuffer = ''
 
@@ -413,8 +422,25 @@ function ChatPage() {
 
         chunkBuffer += chunk
 
-        const { extractedText, trailingLine } = extractStreamText(chunkBuffer)
+        const { extractedText, sources, trailingLine } = extractStreamText(chunkBuffer)
         chunkBuffer = trailingLine
+
+        if (sources.length > 0) {
+          assistantSources = sources
+          setMessages((currentMessages) => {
+            const nextMessages = [...currentMessages]
+            const lastMessage = nextMessages.at(-1)
+
+            if (lastMessage?.role === 'assistant') {
+              nextMessages[nextMessages.length - 1] = {
+                ...lastMessage,
+                sources: assistantSources,
+              }
+            }
+
+            return nextMessages
+          })
+        }
 
         if (!extractedText) {
           continue
@@ -430,6 +456,7 @@ function ChatPage() {
               role: 'assistant',
               title: 'DAGS AI',
               text: assistantText,
+              sources: assistantSources,
               timestamp: getTimestamp(),
             },
           ])
@@ -445,6 +472,7 @@ function ChatPage() {
               role: 'assistant',
               title: 'DAGS AI',
               text: assistantText,
+              sources: assistantSources,
               timestamp: lastMessage.timestamp,
             }
           }
@@ -455,7 +483,11 @@ function ChatPage() {
 
       chunkBuffer += decoder.decode()
 
-      const { extractedText: finalText } = extractStreamText(chunkBuffer)
+      const { extractedText: finalText, sources: finalSources } = extractStreamText(chunkBuffer)
+
+      if (finalSources.length > 0) {
+        assistantSources = finalSources
+      }
 
       if (finalText) {
         assistantText += finalText
@@ -468,10 +500,11 @@ function ChatPage() {
             role: 'assistant',
             title: 'DAGS AI',
             text: assistantText,
+            sources: assistantSources,
             timestamp: getTimestamp(),
           },
         ])
-      } else if (finalText) {
+      } else if (finalText || finalSources.length > 0) {
         setMessages((currentMessages) => {
           const nextMessages = [...currentMessages]
           const lastMessage = nextMessages.at(-1)
@@ -481,6 +514,7 @@ function ChatPage() {
               role: 'assistant',
               title: 'DAGS AI',
               text: assistantText,
+              sources: assistantSources,
               timestamp: lastMessage.timestamp,
             }
           }
@@ -554,7 +588,9 @@ function ChatPage() {
         onModelChange={setChatModel}
         onRemoveDocument={handleRemoveDocument}
         onSubmit={handleSubmit}
+        onWebSearchChange={setWebSearch}
         uploadedDocuments={uploadedDocuments}
+        webSearch={webSearch}
       />
 
       <p className="chat-disclaimer">

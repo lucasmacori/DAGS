@@ -14,7 +14,19 @@ describe('chat utils', () => {
     )
 
     expect(result.extractedText).toBe('Hello```\npython\nprint("hi")')
+    expect(result.sources).toEqual([])
     expect(result.trailingLine).toBe('')
+  })
+
+  it('extracts streamed source events separately from assistant text', () => {
+    const result = extractStreamText(
+      'data:Answer\n\nevent: sources\ndata:[{"title":"Docs","url":"https://example.com","content":"Snippet"}]\n\n',
+    )
+
+    expect(result.extractedText).toBe('Answer')
+    expect(result.sources).toEqual([
+      { title: 'Docs', url: 'https://example.com', content: 'Snippet' },
+    ])
   })
 
   it('parses text and code blocks separately', () => {
@@ -46,6 +58,7 @@ describe('chat utils', () => {
           conversation_id: 'conversation-1',
           role: 'ASSISTANT',
           content: 'Assistant reply',
+          sources: [{ title: 'Docs', url: 'https://example.com', content: 'Snippet' }],
           created_at: '2026-04-19T23:12:11.256908',
         },
         {
@@ -61,5 +74,8 @@ describe('chat utils', () => {
     expect(messages[0]?.role).toBe('user')
     expect(messages[1]?.role).toBe('assistant')
     expect(messages[1]?.title).toBe('DAGS AI')
+    expect(messages[1]?.sources).toEqual([
+      { title: 'Docs', url: 'https://example.com', content: 'Snippet' },
+    ])
   })
 })

@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { createRef } from 'react'
 import { describe, expect, it } from 'vitest'
 
@@ -32,5 +32,40 @@ describe('ChatThread', () => {
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noreferrer')
     expect(screen.queryByText(/alert\("xss"\)/)).toBeNull()
+  })
+
+  it('renders assistant sources collapsed by default', () => {
+    render(
+      <ChatThread
+        isLoadingHistory={false}
+        isSendingMessage={false}
+        messages={[
+          {
+            role: 'assistant',
+            title: 'DAGS AI',
+            text: 'Answer with sources.',
+            timestamp: '10:30 AM',
+            sources: [
+              {
+                title: 'Source title',
+                url: 'https://example.com/source',
+                content: 'Source content',
+              },
+            ],
+          },
+        ]}
+        threadRef={createRef()}
+      />,
+    )
+
+    const summary = screen.getByText('Sources (1)')
+    const details = summary.closest('details')
+
+    expect(details?.hasAttribute('open')).toBe(false)
+    fireEvent.click(summary)
+    expect(details?.hasAttribute('open')).toBe(true)
+
+    const link = screen.getByRole('link', { name: 'Source title' })
+    expect(link.getAttribute('href')).toBe('https://example.com/source')
   })
 })

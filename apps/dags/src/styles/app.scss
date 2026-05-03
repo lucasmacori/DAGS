@@ -950,6 +950,12 @@ textarea {
   font-size: 0.75rem;
 }
 
+.chat-composer-options {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
 .chat-composer-model {
   display: flex;
   align-items: center;
@@ -974,6 +980,62 @@ textarea {
   option {
     background: $surface-low;
     color: $text-primary;
+  }
+}
+
+.chat-composer-web-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+
+  input {
+    accent-color: $primary-soft;
+  }
+
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+.chat-sources {
+  margin-top: 1rem;
+  border-top: 1px solid rgba($outline-variant, 0.65);
+  padding-top: 0.75rem;
+  color: rgba($text-secondary, 0.85);
+  font-size: 0.82rem;
+
+  summary {
+    cursor: pointer;
+    color: $text-primary;
+    font-weight: 600;
+  }
+}
+
+.chat-sources__list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chat-sources__item {
+  display: grid;
+  gap: 0.25rem;
+
+  a {
+    color: $primary-soft;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.45;
   }
 }
 
@@ -1900,6 +1962,11 @@ textarea {
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem 0.75rem;
+  }
+
+  .chat-composer-options {
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .chat-composer-meta span:last-child {

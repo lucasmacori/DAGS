@@ -6,6 +6,7 @@ type ChatRequest = {
   chat_id: string
   message: string
   model?: string
+  web_search?: boolean
 }
 
 export const Route = createFileRoute('/api/chat')({
@@ -31,6 +32,10 @@ export const Route = createFileRoute('/api/chat')({
           chat_id: body.chat_id?.trim() ?? '',
           message: body.message?.trim() ?? '',
           model: body.model?.trim() || 'gemma4:e4b',
+        }
+
+        if (body.web_search === true) {
+          payload.web_search = true
         }
 
         if (!payload.chat_id || !payload.message) {

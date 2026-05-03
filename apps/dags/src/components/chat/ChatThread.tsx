@@ -58,6 +58,22 @@ export function ChatThread({
                 {messageItem.trailingText ? (
                   <p className="chat-bubble__text">{messageItem.trailingText}</p>
                 ) : null}
+
+                {messageItem.sources?.length ? (
+                  <details className="chat-sources">
+                    <summary>Sources ({messageItem.sources.length})</summary>
+                    <ul className="chat-sources__list">
+                      {messageItem.sources.map((source) => (
+                        <li key={source.url} className="chat-sources__item">
+                          <a href={source.url} target="_blank" rel="noreferrer">
+                            {source.title}
+                          </a>
+                          <p>{source.content}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
               </div>
 
               <div className="chat-assistant-meta">

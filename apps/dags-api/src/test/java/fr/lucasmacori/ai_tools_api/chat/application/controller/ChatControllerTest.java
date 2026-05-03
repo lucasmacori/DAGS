@@ -17,6 +17,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -87,7 +88,9 @@ class ChatControllerTest {
 
 	@Test
 	void chatStreamsAssistantResponse() {
-		when(applicationService.chat(any())).thenReturn(Flux.just("Hello", " there"));
+		when(applicationService.chat(any())).thenReturn(Flux.<ServerSentEvent<?>>just(
+				ServerSentEvent.builder("Hello").build(),
+				ServerSentEvent.builder(" there").build()));
 
 		FluxExchangeResult<String> result = authenticatedClient().post()
 				.uri("/api/v1/chat")

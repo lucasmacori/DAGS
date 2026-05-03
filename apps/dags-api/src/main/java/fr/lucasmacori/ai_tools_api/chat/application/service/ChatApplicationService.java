@@ -3,6 +3,7 @@ package fr.lucasmacori.ai_tools_api.chat.application.service;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,12 +21,13 @@ import reactor.core.publisher.Flux;
 public class ChatApplicationService {
 	private final ChatService chatService;
 
-	public Flux<String> chat(ChatRequestBody request) {
+	public Flux<ServerSentEvent<?>> chat(ChatRequestBody request) {
 		ChatRequest chatRequest = new ChatRequest(
 				request.chatId(),
 				request.message(),
 				request.model(),
-				request.documentIds());
+				request.documentIds(),
+				request.webSearch());
 		return chatService.chat(chatRequest);
 	}
 

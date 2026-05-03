@@ -41,7 +41,8 @@ class ChatDocumentApplicationServiceTest {
 						"model",
 						new Prompt("system"),
 						null,
-						new Documents("in-memory", 200_000, 10L * 1024L * 1024L)));
+						new Documents("in-memory", 200_000, 10L * 1024L * 1024L),
+						null));
 
 		List<ChatDocument> documents = service.uploadDocuments(Flux.just(filePart("notes.txt", "hello"))).block();
 

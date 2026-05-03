@@ -201,6 +201,10 @@ These variables configure the Spring Boot app and are the main knobs for behavio
 | `CHAT_DOCUMENTS_PROVIDER` | `pgvector` in container | Chat document storage provider |
 | `CHAT_DOCUMENTS_MAX_CHARACTERS` | `200000` | Max extracted characters stored per document |
 | `CHAT_DOCUMENTS_MAX_FILE_SIZE_BYTES` | `10485760` | Max upload size per document |
+| `CHAT_WEB_SEARCH_ENABLED` | `true` | Enables manual Tavily web search in chat |
+| `TAVILY_API_KEY` | unset | Tavily API key used when web search is enabled |
+| `TAVILY_MAX_RESULTS` | `5` | Max Tavily results included per chat message |
+| `TAVILY_SEARCH_DEPTH` | `basic` | Tavily search depth |
 | `SPRING_AI_OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama base URL |
 | `SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL` | `gemma4:e4b` | Ollama chat model |
 | `SPRING_AI_OLLAMA_EMBEDDING_OPTIONS_MODEL` | `nomic-embed-text` | Ollama embedding model |
@@ -282,6 +286,13 @@ This is the complete set of environment variables currently used for the main ap
 | `CHAT_DOCUMENTS_PROVIDER` | `pgvector` in container | Document storage provider |
 | `CHAT_DOCUMENTS_MAX_CHARACTERS` | `200000` | Max extracted characters per uploaded document |
 | `CHAT_DOCUMENTS_MAX_FILE_SIZE_BYTES` | `10485760` | Max document upload size |
+| `CHAT_WEB_SEARCH_ENABLED` | `true` | Enables manual Tavily web search in chat |
+| `CHAT_WEB_SEARCH_PROVIDER` | `tavily` | Web search provider |
+| `TAVILY_API_KEY` | unset | Tavily API key used when web search is enabled |
+| `TAVILY_BASE_URL` | `https://api.tavily.com` | Tavily API base URL |
+| `TAVILY_MAX_RESULTS` | `5` | Max Tavily results included per chat message |
+| `TAVILY_SEARCH_DEPTH` | `basic` | Tavily search depth |
+| `TAVILY_TIMEOUT_SECONDS` | `10` | Tavily request timeout |
 | `SPRING_AI_OLLAMA_BASE_URL` | `http://localhost:11434` | Ollama base URL |
 | `SPRING_AI_OLLAMA_CHAT_OPTIONS_MODEL` | `gemma4:e4b` | Ollama chat model |
 | `SPRING_AI_OLLAMA_EMBEDDING_OPTIONS_MODEL` | `nomic-embed-text` | Ollama embedding model |

@@ -30,7 +30,9 @@ describe('ChatComposer', () => {
         onSubmit={(event) => {
           event.preventDefault()
         }}
+        onWebSearchChange={() => {}}
         uploadedDocuments={[]}
+        webSearch={false}
       />
     )
   }
@@ -57,7 +59,9 @@ describe('ChatComposer', () => {
         onModelChange={() => {}}
         onRemoveDocument={() => {}}
         onSubmit={onSubmit}
+        onWebSearchChange={() => {}}
         uploadedDocuments={[]}
+        webSearch={false}
       />,
     )
 
@@ -97,5 +101,34 @@ describe('ChatComposer', () => {
 
     expect(textarea.style.height).toBe('128px')
     expect(textarea.style.overflowY).toBe('auto')
+  })
+
+  it('toggles web search manually', () => {
+    const onWebSearchChange = vi.fn()
+
+    render(
+      <ChatComposer
+        composerRef={createRef()}
+        disabled={false}
+        isUploadingDocuments={false}
+        message="Hello"
+        model="gemma4:e4b"
+        modelOptions={[{ value: 'gemma4:e4b', label: 'Gemma4:e4b' }]}
+        onChange={() => {}}
+        onDocumentsSelected={() => {}}
+        onModelChange={() => {}}
+        onRemoveDocument={() => {}}
+        onSubmit={(event) => {
+          event.preventDefault()
+        }}
+        onWebSearchChange={onWebSearchChange}
+        uploadedDocuments={[]}
+        webSearch={false}
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Web search'))
+
+    expect(onWebSearchChange).toHaveBeenCalledWith(true)
   })
 })

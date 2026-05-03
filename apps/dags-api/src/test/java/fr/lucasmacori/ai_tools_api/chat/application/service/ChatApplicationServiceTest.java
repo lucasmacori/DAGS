@@ -31,9 +31,10 @@ class ChatApplicationServiceTest {
 		IConversationHistoryRepository historyRepository = mock(IConversationHistoryRepository.class);
 		IChatDocumentRepository documentRepository = mock(IChatDocumentRepository.class);
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository, query -> List.of()));
 
-		String response = applicationService.chat(new ChatRequestBody("chat-1", "Hello", null, null))
+		Object response = applicationService.chat(new ChatRequestBody("chat-1", "Hello", null, null, null))
+				.map(event -> event.data())
 				.collectList()
 				.block()
 				.getFirst();
@@ -50,7 +51,7 @@ class ChatApplicationServiceTest {
 		when(conversationRepository.createConversation("test"))
 				.thenReturn(new Conversation("930d7b72-4cc0-450d-9f88-a8c3abef3b87", "test", null));
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository, query -> List.of()));
 
 		assertNotNull(applicationService.createConversation("test"));
 	}
@@ -64,10 +65,10 @@ class ChatApplicationServiceTest {
 		ConversationHistoryPage expected = new ConversationHistoryPage(
 				0,
 				20,
-				List.of(new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", LocalDateTime.now())));
+				List.of(new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", List.of(), LocalDateTime.now())));
 		when(historyRepository.getConversationHistory("chat-1", 0, 20)).thenReturn(expected);
 		ChatApplicationService applicationService = new ChatApplicationService(
-				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository));
+				new ChatService(generator, "default-model", "System prompt", conversationRepository, historyRepository, documentRepository, query -> List.of()));
 
 		ConversationHistoryPage result = applicationService.getConversationHistory("chat-1", 0);
 

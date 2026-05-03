@@ -14,7 +14,9 @@ type ChatComposerProps = {
   onModelChange: (value: string) => void
   onRemoveDocument: (documentId: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  onWebSearchChange: (value: boolean) => void
   uploadedDocuments: UploadedChatDocument[]
+  webSearch: boolean
 }
 
 const maxComposerInputHeight = 128
@@ -43,7 +45,9 @@ export function ChatComposer({
   onModelChange,
   onRemoveDocument,
   onSubmit,
+  onWebSearchChange,
   uploadedDocuments,
+  webSearch,
 }: ChatComposerProps) {
   function handleComposerKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key !== 'Enter' || event.shiftKey) {
@@ -159,23 +163,38 @@ export function ChatComposer({
         </div>
 
         <div className="chat-composer-meta">
-          <div className="chat-composer-model">
-            <span className="material-symbols-outlined">auto_awesome</span>
-            <div className="source-modal__select-wrap">
-              <select
-                className="chat-composer-model__select"
-                value={model}
-                onChange={(e) => {
-                  onModelChange(e.target.value)
-                }}
-              >
-                {modelOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+          <div className="chat-composer-options">
+            <div className="chat-composer-model">
+              <span className="material-symbols-outlined">auto_awesome</span>
+              <div className="source-modal__select-wrap">
+                <select
+                  className="chat-composer-model__select"
+                  value={model}
+                  onChange={(e) => {
+                    onModelChange(e.target.value)
+                  }}
+                >
+                  {modelOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+
+            <label className="chat-composer-web-search">
+              <input
+                aria-label="Web search"
+                type="checkbox"
+                checked={webSearch}
+                onChange={(event) => {
+                  onWebSearchChange(event.target.checked)
+                }}
+              />
+              <span className="material-symbols-outlined">travel_explore</span>
+              <span>Web search</span>
+            </label>
           </div>
           <span>DAGS v{appVersion}</span>
         </div>

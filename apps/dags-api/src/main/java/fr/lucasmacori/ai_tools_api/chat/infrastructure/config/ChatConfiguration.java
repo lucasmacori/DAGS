@@ -1,5 +1,7 @@
 package fr.lucasmacori.ai_tools_api.chat.infrastructure.config;
 
+import java.time.Duration;
+
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.ChatMemoryRepository;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
@@ -14,15 +16,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationHistoryRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.repository.IConversationRepository;
 import fr.lucasmacori.ai_tools_api.chat.domain.service.ChatService;
 import fr.lucasmacori.ai_tools_api.chat.domain.spi.ChatGenerator;
+import fr.lucasmacori.ai_tools_api.chat.domain.spi.WebSearchClient;
 import fr.lucasmacori.ai_tools_api.chat.infrastructure.repository.InMemoryChatDocumentRepository;
 import fr.lucasmacori.ai_tools_api.chat.infrastructure.repository.PgVectorChatDocumentRepository;
+import fr.lucasmacori.ai_tools_api.chat.infrastructure.search.TavilyWebSearchClient;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -39,14 +45,44 @@ class ChatConfiguration {
 	ChatService chatService(
 			ChatGenerator chatGenerator,
 			ChatPromptProperties chatPromptProperties,
-			IChatDocumentRepository chatDocumentRepository) {
+			IChatDocumentRepository chatDocumentRepository,
+			WebSearchClient webSearchClient) {
 		return new ChatService(
 				chatGenerator,
 				chatPromptProperties.defaultModel(),
 				chatPromptProperties.system(),
 				conversationRepository,
 				conversationHistoryRepository,
-				chatDocumentRepository);
+				chatDocumentRepository,
+				webSearchClient);
+	}
+
+	@Bean
+	WebSearchClient webSearchClient(ChatPromptProperties chatPromptProperties, WebClient.Builder webClientBuilder) {
+		if (!chatPromptProperties.webSearchEnabled()) {
+			return query -> java.util.List.of();
+		}
+
+		String provider = chatPromptProperties.webSearchProvider().trim().toLowerCase();
+		if (!"tavily".equals(provider)) {
+			throw new IllegalStateException("Unsupported web search provider: " + chatPromptProperties.webSearchProvider());
+		}
+
+		String apiKey = chatPromptProperties.tavilyApiKey().trim();
+		if (apiKey.isEmpty()) {
+			return query -> java.util.List.of();
+		}
+
+		WebClient webClient = webClientBuilder
+				.baseUrl(chatPromptProperties.tavilyBaseUrl())
+				.defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
+				.build();
+
+		return new TavilyWebSearchClient(
+				webClient,
+				Duration.ofSeconds(chatPromptProperties.tavilyTimeoutSeconds()),
+				chatPromptProperties.tavilyMaxResults(),
+				chatPromptProperties.tavilySearchDepth());
 	}
 
 	@Bean

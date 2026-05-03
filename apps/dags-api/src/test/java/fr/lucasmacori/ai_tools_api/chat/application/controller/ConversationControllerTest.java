@@ -25,6 +25,7 @@ import fr.lucasmacori.ai_tools_api.chat.domain.model.Conversation;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationHistoryPage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessage;
 import fr.lucasmacori.ai_tools_api.chat.domain.model.ConversationMessageRole;
+import fr.lucasmacori.ai_tools_api.chat.domain.model.WebSearchResult;
 import fr.lucasmacori.ai_tools_api.infrastructure.security.SecurityConfiguration;
 
 @WebFluxTest(ConversationController.class)
@@ -73,8 +74,8 @@ class ConversationControllerTest {
 				0,
 				20,
 				List.of(
-						new ConversationMessage("message-2", "chat-1", ConversationMessageRole.ASSISTANT, "Hi", LocalDateTime.parse("2026-04-19T21:00:00")),
-						new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", LocalDateTime.parse("2026-04-19T20:59:00"))));
+						new ConversationMessage("message-2", "chat-1", ConversationMessageRole.ASSISTANT, "Hi", List.of(new WebSearchResult("Docs", "https://example.com", "Snippet")), LocalDateTime.parse("2026-04-19T21:00:00")),
+						new ConversationMessage("message-1", "chat-1", ConversationMessageRole.USER, "Hello", List.of(), LocalDateTime.parse("2026-04-19T20:59:00"))));
 		when(applicationService.getConversationHistory("chat-1", 0)).thenReturn(historyPage);
 
 		authenticatedClient().get()
@@ -87,6 +88,8 @@ class ConversationControllerTest {
 				.jsonPath("$.size").isEqualTo(20)
 				.jsonPath("$.messages[0].message_id").isEqualTo("message-2")
 				.jsonPath("$.messages[0].role").isEqualTo("ASSISTANT")
+				.jsonPath("$.messages[0].sources[0].title").isEqualTo("Docs")
+				.jsonPath("$.messages[0].sources[0].url").isEqualTo("https://example.com")
 				.jsonPath("$.messages[1].message_id").isEqualTo("message-1")
 				.jsonPath("$.messages[1].role").isEqualTo("USER");
 	}

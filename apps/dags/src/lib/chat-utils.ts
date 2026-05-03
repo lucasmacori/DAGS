@@ -1,3 +1,9 @@
+export type ChatSource = {
+  title: string
+  url: string
+  content: string
+}
+
 export type ChatMessage = {
   role: 'user' | 'assistant'
   text: string
@@ -7,6 +13,7 @@ export type ChatMessage = {
   trailingText?: string
   codeTitle?: string
   code?: string
+  sources?: ChatSource[]
 }
 
 export type ParsedBlock =
@@ -21,6 +28,7 @@ export type ConversationHistoryResponse = {
     conversation_id: string
     role: 'USER' | 'ASSISTANT'
     content: string
+    sources?: ChatSource[]
     created_at: string
   }>
 }
@@ -43,12 +51,19 @@ export function extractStreamText(buffer: string) {
   const events = normalizedBuffer.split('\n\n')
   const trailingLine = events.pop() ?? ''
   let extractedText = ''
+  const sources: ChatSource[] = []
 
   for (const event of events) {
     const lines = event.split('\n')
     const dataLines: string[] = []
+    let eventName = 'message'
 
     for (const line of lines) {
+      if (line.startsWith('event:')) {
+        eventName = line.slice(6).trim()
+        continue
+      }
+
       if (!line.startsWith('data:')) {
         continue
       }
@@ -60,14 +75,47 @@ export function extractStreamText(buffer: string) {
       }
     }
 
-    if (dataLines.length > 0) {
+    if (eventName === 'sources') {
+      sources.push(...parseSourcesEvent(dataLines.join('\n')))
+    } else if (dataLines.length > 0) {
       extractedText += dataLines.join('\n')
     }
   }
 
   return {
     extractedText,
+    sources,
     trailingLine,
+  }
+}
+
+function parseSourcesEvent(value: string): ChatSource[] {
+  try {
+    const parsed = JSON.parse(value) as unknown
+
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.flatMap((item) => {
+      if (typeof item !== 'object' || item === null) {
+        return []
+      }
+
+      const source = item as Partial<ChatSource>
+
+      if (
+        typeof source.title !== 'string' ||
+        typeof source.url !== 'string' ||
+        typeof source.content !== 'string'
+      ) {
+        return []
+      }
+
+      return [{ title: source.title, url: source.url, content: source.content }]
+    })
+  } catch {
+    return []
   }
 }
 
@@ -124,6 +172,7 @@ export function mapConversationHistoryMessages(
     id: item.message_id,
     role: item.role === 'ASSISTANT' ? 'assistant' : 'user',
     text: item.content,
+    sources: item.sources,
     timestamp: formatChatTimestamp(item.created_at),
     title: item.role === 'ASSISTANT' ? 'DAGS AI' : undefined,
   }))
