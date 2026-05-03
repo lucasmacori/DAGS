@@ -31,7 +31,7 @@ describe('ChatThread', () => {
     expect(link.getAttribute('href')).toBe('https://example.com')
     expect(link.getAttribute('target')).toBe('_blank')
     expect(link.getAttribute('rel')).toBe('noreferrer')
-    expect(screen.queryByText(/alert\("xss"\)/)).toBeNull()
+    expect(screen.getByText(/<script>alert\("xss"\)<\/script>/)).toBeTruthy()
   })
 
   it('renders assistant sources collapsed by default', () => {

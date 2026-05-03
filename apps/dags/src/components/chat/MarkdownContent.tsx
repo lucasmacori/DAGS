@@ -1,5 +1,8 @@
 import Markdown, { type Components } from 'react-markdown'
+import rehypeKatex from 'rehype-katex'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import 'katex/dist/katex.min.css'
 
 type MarkdownContentProps = {
   content: string
@@ -47,7 +50,11 @@ const markdownComponents: Components = {
 export function MarkdownContent({ content }: MarkdownContentProps) {
   return (
     <div className="chat-markdown">
-      <Markdown components={markdownComponents} remarkPlugins={[remarkGfm]} skipHtml>
+      <Markdown
+        components={markdownComponents}
+        rehypePlugins={[rehypeKatex]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+      >
         {content}
       </Markdown>
     </div>

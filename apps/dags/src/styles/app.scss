@@ -737,6 +737,20 @@ textarea {
   text-underline-offset: 0.2em;
 }
 
+.chat-markdown .katex-display {
+  margin: 0.75rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.chat-markdown .katex {
+  color: $text-primary;
+}
+
+.chat-markdown .katex-error {
+  color: $danger;
+}
+
 .chat-user-time,
 .chat-assistant-meta {
   color: rgba($text-secondary, 0.6);
