@@ -2,6 +2,8 @@
 
 ![DAGS AI conversation preview](images/conversation.png)
 
+**DAGS is still in an early development stage. Use it at your own risk**
+
 ## Your Private AI Workspace
 
 DAGS is a personal AI assistant you can run yourself. It gives you a clean chat experience where you can ask questions, upload documents, summarize content, generate translations, and keep useful conversations in one place.

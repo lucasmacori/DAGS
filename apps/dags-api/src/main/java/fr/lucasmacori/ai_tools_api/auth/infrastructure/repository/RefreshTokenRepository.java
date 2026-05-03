@@ -58,6 +58,13 @@ public class RefreshTokenRepository implements IRefreshTokenRepository {
 				Map.of("token_id", UUID.fromString(tokenId), "revoked_at", revokedAt));
 	}
 
+	@Override
+	public void revokeAllForUser(String userId, LocalDateTime revokedAt) {
+		jdbcTemplate.update(
+				"UPDATE auth_refresh_token SET revoked_at = :revoked_at WHERE user_id = :user_id AND revoked_at IS NULL",
+				Map.of("user_id", UUID.fromString(userId), "revoked_at", revokedAt));
+	}
+
 	private static final class RefreshTokenRowMapper implements RowMapper<RefreshTokenRecord> {
 		@Override
 		public RefreshTokenRecord mapRow(ResultSet rs, int rowNum) throws SQLException {

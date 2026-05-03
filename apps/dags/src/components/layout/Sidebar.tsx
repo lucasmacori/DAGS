@@ -84,6 +84,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   }
 
   const { user } = RootRoute.useRouteContext()
+  const displayName = user?.email?.split('@')[0] || 'User'
 
   return (
     <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
@@ -161,8 +162,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             <span className="material-symbols-outlined sidebar__avatar-icon">person</span>
           </div>
           <div className="sidebar__profile-text">
-            <p className="sidebar__profile-name" title={user?.email}>{user?.email}</p>
-            <p className="sidebar__profile-plan">Workspace Member</p>
+            <p className="sidebar__profile-name" title={user?.email}>{displayName}</p>
+            <p className="sidebar__profile-plan" title={user?.email}>{user?.email}</p>
           </div>
           
           <button

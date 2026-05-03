@@ -11,4 +11,6 @@ public interface IRefreshTokenRepository {
 	Optional<RefreshTokenRecord> findByTokenHash(String tokenHash);
 
 	void revoke(String tokenId, LocalDateTime revokedAt);
+
+	void revokeAllForUser(String userId, LocalDateTime revokedAt);
 }

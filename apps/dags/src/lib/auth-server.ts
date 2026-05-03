@@ -248,3 +248,65 @@ export async function logout() {
   clearAuthCookies()
   return true
 }
+
+export async function updateEmail(input: { email: string, password: string }) {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    throw new Error('Unauthorized')
+  }
+
+  const response = await fetchBackend('/auth/me/email', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (response.status === 401) {
+    throw new Error('Invalid password.')
+  }
+
+  if (response.status === 409) {
+    throw new Error('Email is already in use.')
+  }
+
+  if (!response.ok) {
+    throw new Error((await response.text()).trim() || 'Could not update email.')
+  }
+
+  const payload = (await response.json()) as TokenResponse
+  storeAuthCookies(payload)
+  return payload.user
+}
+
+export async function changePassword(input: { currentPassword: string, newPassword: string }) {
+  const accessToken = await getAccessToken()
+
+  if (!accessToken) {
+    throw new Error('Unauthorized')
+  }
+
+  const response = await fetchBackend('/auth/me/password', {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(input),
+  })
+
+  if (response.status === 401) {
+    throw new Error('Current password is incorrect.')
+  }
+
+  if (!response.ok) {
+    throw new Error((await response.text()).trim() || 'Could not change password.')
+  }
+
+  const payload = (await response.json()) as TokenResponse
+  storeAuthCookies(payload)
+  return payload.user
+}

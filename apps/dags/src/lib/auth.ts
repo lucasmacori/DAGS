@@ -49,3 +49,15 @@ export const logoutFn = createServerFn({ method: 'POST' }).handler(async () => {
   const authServer = await import('./auth-server')
   return authServer.logout()
 })
+
+export const updateEmailFn = createServerFn({ method: 'POST' })
+  .handler(async ({ data }: { data: { email: string, password: string } }) => {
+    const authServer = await import('./auth-server')
+    return authServer.updateEmail(data)
+  })
+
+export const changePasswordFn = createServerFn({ method: 'POST' })
+  .handler(async ({ data }: { data: { currentPassword: string, newPassword: string } }) => {
+    const authServer = await import('./auth-server')
+    return authServer.changePassword(data)
+  })

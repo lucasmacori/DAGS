@@ -109,6 +109,59 @@ public class AuthService {
 		return new AuthUserView(jwt.getSubject(), jwt.getClaimAsString("email"));
 	}
 
+	@Transactional
+	public AuthTokenPair updateEmail(String userId, String newEmail, String currentPassword) {
+		AppUser user = appUserRepository.findById(userId)
+				.filter(AppUser::enabled)
+				.orElseThrow(() -> new InvalidCredentialsException());
+
+		if (!passwordEncoder.matches(normalizeRequiredPassword(currentPassword), user.passwordHash())) {
+			throw new InvalidCurrentPasswordException();
+		}
+
+		String normalizedNewEmail = normalizeEmail(newEmail);
+		if (!normalizedNewEmail.equals(user.email()) && appUserRepository.findByEmail(normalizedNewEmail).isPresent()) {
+			throw new EmailAlreadyUsedException();
+		}
+
+		appUserRepository.updateEmail(userId, normalizedNewEmail);
+
+		AppUser updatedUser = new AppUser(
+				user.userId(),
+				normalizedNewEmail,
+				user.passwordHash(),
+				user.enabled(),
+				user.createdAt());
+
+		return issueTokenPair(updatedUser);
+	}
+
+	@Transactional
+	public AuthTokenPair changePassword(String userId, String currentPassword, String newPassword) {
+		AppUser user = appUserRepository.findById(userId)
+				.filter(AppUser::enabled)
+				.orElseThrow(() -> new InvalidCredentialsException());
+
+		if (!passwordEncoder.matches(normalizeRequiredPassword(currentPassword), user.passwordHash())) {
+			throw new InvalidCurrentPasswordException();
+		}
+
+		String newPasswordHash = passwordEncoder.encode(normalizeRequiredPassword(newPassword));
+		appUserRepository.updatePasswordHash(userId, newPasswordHash);
+
+		LocalDateTime now = LocalDateTime.now(clock);
+		refreshTokenRepository.revokeAllForUser(userId, now);
+
+		AppUser updatedUser = new AppUser(
+				user.userId(),
+				user.email(),
+				newPasswordHash,
+				user.enabled(),
+				user.createdAt());
+
+		return issueTokenPair(updatedUser);
+	}
+
 	private AuthTokenPair issueTokenPair(AppUser user) {
 		Instant now = clock.instant();
 		Instant accessExpiresAt = now.plusSeconds(authProperties.accessTokenTtlSeconds());

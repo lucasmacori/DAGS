@@ -61,6 +61,20 @@ public class AppUserRepository implements IAppUserRepository {
 		return user;
 	}
 
+	@Override
+	public void updateEmail(String userId, String newEmail) {
+		jdbcTemplate.update(
+				"UPDATE app_user SET email = :email WHERE user_id = :user_id",
+				Map.of("email", newEmail, "user_id", UUID.fromString(userId)));
+	}
+
+	@Override
+	public void updatePasswordHash(String userId, String newPasswordHash) {
+		jdbcTemplate.update(
+				"UPDATE app_user SET password_hash = :password_hash WHERE user_id = :user_id",
+				Map.of("password_hash", newPasswordHash, "user_id", UUID.fromString(userId)));
+	}
+
 	private static final class AppUserRowMapper implements RowMapper<AppUser> {
 		@Override
 		public AppUser mapRow(ResultSet rs, int rowNum) throws SQLException {
