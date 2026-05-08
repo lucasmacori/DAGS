@@ -13,8 +13,8 @@ public class RssFeedReadApplicationService {
 
 	private final RssFeedReadService rssFeedReadService;
 
-	public void triggerReadAllFeeds() {
-		Mono.fromRunnable(rssFeedReadService::readAllFeeds)
+	public void triggerReadAllFeeds(String userId) {
+		Mono.fromRunnable(() -> rssFeedReadService.readAllFeeds(userId))
 				.subscribeOn(Schedulers.boundedElastic())
 				.subscribe();
 	}

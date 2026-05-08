@@ -57,6 +57,26 @@ public class RssSourceItemRepository implements IRssSourceItemRepository {
 	}
 
 	@Override
+	public List<RssSourceItemLink> findUnsummarizedArticleLinks(String userId) {
+		return jdbcTemplate.query(
+				"""
+				SELECT rss_source_item_id, link, content, title
+				FROM rss_source_item
+				WHERE user_id = :user_id
+				  AND link IS NOT NULL
+				  AND btrim(link) <> ''
+				  AND summarized_at IS NULL
+				ORDER BY discovered_at DESC
+				""",
+				Map.of("user_id", userId),
+				(rs, rowNum) -> new RssSourceItemLink(
+						rs.getObject("rss_source_item_id", UUID.class).toString(),
+						rs.getString("link"),
+						rs.getString("content"),
+						rs.getString("title")));
+	}
+
+	@Override
 	public void markArticleAsRead(String userId, Source source, RssFeedArticle article) {
 		MapSqlParameterSource parameters = new MapSqlParameterSource()
 				.addValue("rss_source_item_id", UUID.randomUUID())
@@ -107,5 +127,31 @@ public class RssSourceItemRepository implements IRssSourceItemRepository {
 						"user_id", userId,
 						"rss_source_item_id", UUID.fromString(rssSourceItemId),
 						"article_read_at", LocalDateTime.now()));
+	}
+
+	@Override
+	public void storeArticleContent(String rssSourceItemId, String content) {
+		jdbcTemplate.update(
+				"""
+				UPDATE rss_source_item
+				SET content = :content
+				WHERE rss_source_item_id = :rss_source_item_id
+				""",
+				Map.of(
+						"rss_source_item_id", UUID.fromString(rssSourceItemId),
+						"content", content));
+	}
+
+	@Override
+	public void markAsSummarized(String rssSourceItemId) {
+		jdbcTemplate.update(
+				"""
+				UPDATE rss_source_item
+				SET summarized_at = :summarized_at
+				WHERE rss_source_item_id = :rss_source_item_id
+				""",
+				Map.of(
+						"rss_source_item_id", UUID.fromString(rssSourceItemId),
+						"summarized_at", LocalDateTime.now()));
 	}
 }

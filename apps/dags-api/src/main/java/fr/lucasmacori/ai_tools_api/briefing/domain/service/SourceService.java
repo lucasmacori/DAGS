@@ -20,11 +20,19 @@ public class SourceService {
 	private final ISourceRepository sourceRepository;
 
 	public List<Source> getSources() {
-		return sourceRepository.findAll();
+		throw new UnsupportedOperationException("Use getSources(userId) instead");
+	}
+
+	public List<Source> getSources(String userId) {
+		return sourceRepository.findAllByUserId(userId);
 	}
 
 	public List<Source> getUnreadArticleSources() {
-		return sourceRepository.findUnreadArticleSources();
+		throw new UnsupportedOperationException("Use getUnreadArticleSources(userId) instead");
+	}
+
+	public List<Source> getUnreadArticleSources(String userId) {
+		return sourceRepository.findUnreadArticleSourcesByUserId(userId);
 	}
 
 	public void markArticleAsRead(String sourceId) {
@@ -32,6 +40,10 @@ public class SourceService {
 	}
 
 	public Source create(SourceType type, String title, String content) {
+		return create(type, title, content, null);
+	}
+
+	public Source create(SourceType type, String title, String content, String userId) {
 		String normalizedTitle = normalizeTitle(title);
 		String normalizedContent = normalizeRequiredText(content, "content");
 		validateContent(type, normalizedContent);
@@ -44,6 +56,9 @@ public class SourceService {
 				normalizedContent,
 				now,
 				now,
+				null,
+				userId,
+				null,
 				null);
 		return sourceRepository.create(source);
 	}
@@ -62,9 +77,20 @@ public class SourceService {
 							nextContent,
 							existing.createdAt(),
 							LocalDateTime.now(),
-							existing.articleReadAt());
+							existing.articleReadAt(),
+							existing.userId(),
+							existing.articleContent(),
+							existing.summarizedAt());
 					return sourceRepository.update(updated);
 				});
+	}
+
+	public void storeArticleContent(String sourceId, String articleContent) {
+		sourceRepository.storeArticleContent(sourceId, articleContent);
+	}
+
+	public void markAsSummarized(String sourceId) {
+		sourceRepository.markAsSummarized(sourceId);
 	}
 
 	public boolean delete(String sourceId) {

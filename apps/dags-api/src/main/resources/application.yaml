@@ -63,3 +63,6 @@ spring:
 translation:
   prompt:
     system: ${TRANSLATION_PROMPT_SYSTEM:You are a professional translator. Translate the user text exactly into the target language. Preserve meaning, tone, and formatting. Return only the translated text. When encountering values like \n keep them}
+
+briefing:
+  default-model: ${DEFAULT_BRIEFING_MODEL:gemma:e4b}

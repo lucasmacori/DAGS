@@ -1,6 +1,6 @@
 .git
 .nx
-.opencode
+.agents
 node_modules
 apps/dags/node_modules
 apps/dags/.output

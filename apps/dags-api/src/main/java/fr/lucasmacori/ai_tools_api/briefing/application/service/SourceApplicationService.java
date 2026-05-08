@@ -18,13 +18,13 @@ public class SourceApplicationService {
 
 	private final SourceService sourceService;
 
-	public List<Source> getSources() {
-		return sourceService.getSources();
+	public List<Source> getSources(String userId) {
+		return sourceService.getSources(userId);
 	}
 
-	public Source createSource(CreateSourceRequestBody request) {
+	public Source createSource(CreateSourceRequestBody request, String userId) {
 		try {
-			return sourceService.create(request.type(), request.title(), request.content());
+			return sourceService.create(request.type(), request.title(), request.content(), userId);
 		}
 		catch (IllegalArgumentException exception) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);

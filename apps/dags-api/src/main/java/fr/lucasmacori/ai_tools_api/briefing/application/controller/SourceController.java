@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -33,25 +35,29 @@ class SourceController {
 	private final ArticleReadApplicationService articleReadApplicationService;
 
 	@GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-	List<SourceResponse> getSources() {
-		return applicationService.getSources().stream().map(SourceResponse::from).toList();
+	List<SourceResponse> getSources(@AuthenticationPrincipal Jwt jwt) {
+		String userId = jwt.getSubject();
+		return applicationService.getSources(userId).stream().map(SourceResponse::from).toList();
 	}
 
 	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-	SourceResponse createSource(@Valid @RequestBody CreateSourceRequestBody request) {
-		return SourceResponse.from(applicationService.createSource(request));
+	SourceResponse createSource(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateSourceRequestBody request) {
+		String userId = jwt.getSubject();
+		return SourceResponse.from(applicationService.createSource(request, userId));
 	}
 
 	@PostMapping(path = "/rss/read")
 	@ResponseStatus(HttpStatus.ACCEPTED)
-	void readRssFeeds() {
-		rssFeedReadApplicationService.triggerReadAllFeeds();
+	void readRssFeeds(@AuthenticationPrincipal Jwt jwt) {
+		String userId = jwt.getSubject();
+		rssFeedReadApplicationService.triggerReadAllFeeds(userId);
 	}
 
 	@PostMapping(path = "/articles/read")
 	@ResponseStatus(HttpStatus.ACCEPTED)
-	void readArticles() {
-		articleReadApplicationService.triggerReadAllArticles();
+	void readArticles(@AuthenticationPrincipal Jwt jwt) {
+		String userId = jwt.getSubject();
+		articleReadApplicationService.triggerReadAllArticles(userId);
 	}
 
 	@PatchMapping(path = "/{sourceId}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

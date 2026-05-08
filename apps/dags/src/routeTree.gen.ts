@@ -22,9 +22,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SourceSourceIdRouteImport } from './routes/source.$sourceId'
 import { Route as ConversationConversationIdRouteImport } from './routes/conversation.$conversationId'
 import { Route as ChatDocumentRouteImport } from './routes/chat.document'
+import { Route as BriefingSettingsRouteImport } from './routes/briefing/settings'
+import { Route as BriefingGenerateRouteImport } from './routes/briefing/generate'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiGenerateChatRouteImport } from './routes/api/generate-chat'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as SourceRssReadRouteImport } from './routes/source.rss.read'
+import { Route as SourceArticlesReadRouteImport } from './routes/source.articles.read'
 import { Route as ConversationConversationIdHistoryRouteImport } from './routes/conversation.$conversationId.history'
 import { Route as ChatDocumentDocumentIdRouteImport } from './routes/chat.document.$documentId'
 
@@ -94,6 +98,16 @@ const ChatDocumentRoute = ChatDocumentRouteImport.update({
   path: '/document',
   getParentRoute: () => ChatRoute,
 } as any)
+const BriefingSettingsRoute = BriefingSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => BriefingRoute,
+} as any)
+const BriefingGenerateRoute = BriefingGenerateRouteImport.update({
+  id: '/generate',
+  path: '/generate',
+  getParentRoute: () => BriefingRoute,
+} as any)
 const ApiTranslateRoute = ApiTranslateRouteImport.update({
   id: '/api/translate',
   path: '/api/translate',
@@ -108,6 +122,16 @@ const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const SourceRssReadRoute = SourceRssReadRouteImport.update({
+  id: '/rss/read',
+  path: '/rss/read',
+  getParentRoute: () => SourceRoute,
+} as any)
+const SourceArticlesReadRoute = SourceArticlesReadRouteImport.update({
+  id: '/articles/read',
+  path: '/articles/read',
+  getParentRoute: () => SourceRoute,
 } as any)
 const ConversationConversationIdHistoryRoute =
   ConversationConversationIdHistoryRouteImport.update({
@@ -124,7 +148,7 @@ const ChatDocumentDocumentIdRoute = ChatDocumentDocumentIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
-  '/briefing': typeof BriefingRoute
+  '/briefing': typeof BriefingRouteWithChildren
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -135,16 +159,20 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/briefing/generate': typeof BriefingGenerateRoute
+  '/briefing/settings': typeof BriefingSettingsRoute
   '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
+  '/source/articles/read': typeof SourceArticlesReadRoute
+  '/source/rss/read': typeof SourceRssReadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
-  '/briefing': typeof BriefingRoute
+  '/briefing': typeof BriefingRouteWithChildren
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -155,17 +183,21 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/briefing/generate': typeof BriefingGenerateRoute
+  '/briefing/settings': typeof BriefingSettingsRoute
   '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
+  '/source/articles/read': typeof SourceArticlesReadRoute
+  '/source/rss/read': typeof SourceRssReadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/archive': typeof ArchiveRoute
-  '/briefing': typeof BriefingRoute
+  '/briefing': typeof BriefingRouteWithChildren
   '/chat': typeof ChatRouteWithChildren
   '/conversation': typeof ConversationRouteWithChildren
   '/history': typeof HistoryRoute
@@ -176,11 +208,15 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-chat': typeof ApiGenerateChatRoute
   '/api/translate': typeof ApiTranslateRoute
+  '/briefing/generate': typeof BriefingGenerateRoute
+  '/briefing/settings': typeof BriefingSettingsRoute
   '/chat/document': typeof ChatDocumentRouteWithChildren
   '/conversation/$conversationId': typeof ConversationConversationIdRouteWithChildren
   '/source/$sourceId': typeof SourceSourceIdRoute
   '/chat/document/$documentId': typeof ChatDocumentDocumentIdRoute
   '/conversation/$conversationId/history': typeof ConversationConversationIdHistoryRoute
+  '/source/articles/read': typeof SourceArticlesReadRoute
+  '/source/rss/read': typeof SourceRssReadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,11 +234,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/briefing/generate'
+    | '/briefing/settings'
     | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
+    | '/source/articles/read'
+    | '/source/rss/read'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -218,11 +258,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/briefing/generate'
+    | '/briefing/settings'
     | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
+    | '/source/articles/read'
+    | '/source/rss/read'
   id:
     | '__root__'
     | '/'
@@ -238,17 +282,21 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-chat'
     | '/api/translate'
+    | '/briefing/generate'
+    | '/briefing/settings'
     | '/chat/document'
     | '/conversation/$conversationId'
     | '/source/$sourceId'
     | '/chat/document/$documentId'
     | '/conversation/$conversationId/history'
+    | '/source/articles/read'
+    | '/source/rss/read'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchiveRoute: typeof ArchiveRoute
-  BriefingRoute: typeof BriefingRoute
+  BriefingRoute: typeof BriefingRouteWithChildren
   ChatRoute: typeof ChatRouteWithChildren
   ConversationRoute: typeof ConversationRouteWithChildren
   HistoryRoute: typeof HistoryRoute
@@ -354,6 +402,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatDocumentRouteImport
       parentRoute: typeof ChatRoute
     }
+    '/briefing/settings': {
+      id: '/briefing/settings'
+      path: '/settings'
+      fullPath: '/briefing/settings'
+      preLoaderRoute: typeof BriefingSettingsRouteImport
+      parentRoute: typeof BriefingRoute
+    }
+    '/briefing/generate': {
+      id: '/briefing/generate'
+      path: '/generate'
+      fullPath: '/briefing/generate'
+      preLoaderRoute: typeof BriefingGenerateRouteImport
+      parentRoute: typeof BriefingRoute
+    }
     '/api/translate': {
       id: '/api/translate'
       path: '/api/translate'
@@ -375,6 +437,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/source/rss/read': {
+      id: '/source/rss/read'
+      path: '/rss/read'
+      fullPath: '/source/rss/read'
+      preLoaderRoute: typeof SourceRssReadRouteImport
+      parentRoute: typeof SourceRoute
+    }
+    '/source/articles/read': {
+      id: '/source/articles/read'
+      path: '/articles/read'
+      fullPath: '/source/articles/read'
+      preLoaderRoute: typeof SourceArticlesReadRouteImport
+      parentRoute: typeof SourceRoute
+    }
     '/conversation/$conversationId/history': {
       id: '/conversation/$conversationId/history'
       path: '/history'
@@ -391,6 +467,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface BriefingRouteChildren {
+  BriefingGenerateRoute: typeof BriefingGenerateRoute
+  BriefingSettingsRoute: typeof BriefingSettingsRoute
+}
+
+const BriefingRouteChildren: BriefingRouteChildren = {
+  BriefingGenerateRoute: BriefingGenerateRoute,
+  BriefingSettingsRoute: BriefingSettingsRoute,
+}
+
+const BriefingRouteWithChildren = BriefingRoute._addFileChildren(
+  BriefingRouteChildren,
+)
 
 interface ChatDocumentRouteChildren {
   ChatDocumentDocumentIdRoute: typeof ChatDocumentDocumentIdRoute
@@ -443,10 +533,14 @@ const ConversationRouteWithChildren = ConversationRoute._addFileChildren(
 
 interface SourceRouteChildren {
   SourceSourceIdRoute: typeof SourceSourceIdRoute
+  SourceArticlesReadRoute: typeof SourceArticlesReadRoute
+  SourceRssReadRoute: typeof SourceRssReadRoute
 }
 
 const SourceRouteChildren: SourceRouteChildren = {
   SourceSourceIdRoute: SourceSourceIdRoute,
+  SourceArticlesReadRoute: SourceArticlesReadRoute,
+  SourceRssReadRoute: SourceRssReadRoute,
 }
 
 const SourceRouteWithChildren =
@@ -455,7 +549,7 @@ const SourceRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchiveRoute: ArchiveRoute,
-  BriefingRoute: BriefingRoute,
+  BriefingRoute: BriefingRouteWithChildren,
   ChatRoute: ChatRouteWithChildren,
   ConversationRoute: ConversationRouteWithChildren,
   HistoryRoute: HistoryRoute,

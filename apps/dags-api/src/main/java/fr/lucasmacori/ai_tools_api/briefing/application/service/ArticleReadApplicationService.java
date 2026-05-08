@@ -13,8 +13,8 @@ public class ArticleReadApplicationService {
 
 	private final ArticleReadService articleReadService;
 
-	public void triggerReadAllArticles() {
-		Mono.fromRunnable(articleReadService::readAllArticles)
+	public void triggerReadAllArticles(String userId) {
+		Mono.fromRunnable(() -> articleReadService.readAllArticles(userId))
 				.subscribeOn(Schedulers.boundedElastic())
 				.subscribe();
 	}

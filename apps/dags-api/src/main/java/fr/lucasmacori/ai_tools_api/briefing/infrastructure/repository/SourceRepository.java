@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import fr.lucasmacori.ai_tools_api.briefing.domain.model.Source;
+import fr.lucasmacori.ai_tools_api.briefing.domain.model.SourceType;
 import fr.lucasmacori.ai_tools_api.briefing.domain.repository.ISourceRepository;
 import fr.lucasmacori.ai_tools_api.briefing.infrastructure.entity.SourceEntity;
 import fr.lucasmacori.ai_tools_api.briefing.infrastructure.repository.jdbc.SourceJDBCRepository;
@@ -20,18 +21,21 @@ public class SourceRepository implements ISourceRepository {
 	private final SourceJDBCRepository sourceJDBCRepository;
 
 	@Override
-	public List<Source> findAll() {
-		return sourceJDBCRepository.findAll().stream().map(SourceEntity::toSource).toList();
+	public List<Source> findAllByUserId(String userId) {
+		return sourceJDBCRepository.findByUserId(UUID.fromString(userId)).stream().map(SourceEntity::toSource).toList();
 	}
 
 	@Override
-	public List<Source> findByType(fr.lucasmacori.ai_tools_api.briefing.domain.model.SourceType type) {
-		return sourceJDBCRepository.findByType(type.name()).stream().map(SourceEntity::toSource).toList();
+	public List<Source> findByTypeAndUserId(SourceType type, String userId) {
+		return sourceJDBCRepository.findByType(type.name()).stream()
+				.filter(entity -> userId.equals(entity.toSource().userId()))
+				.map(SourceEntity::toSource).toList();
 	}
 
 	@Override
-	public List<Source> findUnreadArticleSources() {
-		return sourceJDBCRepository.findByTypeAndArticleReadAtIsNull("ARTICLE_URL").stream().map(SourceEntity::toSource).toList();
+	public List<Source> findUnreadArticleSourcesByUserId(String userId) {
+		return sourceJDBCRepository.findByTypeAndArticleReadAtIsNullAndUserId("ARTICLE_URL", UUID.fromString(userId))
+				.stream().map(SourceEntity::toSource).toList();
 	}
 
 	@Override
@@ -60,6 +64,47 @@ public class SourceRepository implements ISourceRepository {
 						source.content(),
 						source.createdAt(),
 						LocalDateTime.now(),
+						LocalDateTime.now(),
+						source.userId(),
+						source.articleContent(),
+						source.summarizedAt()))
+				.ifPresent(updated -> sourceJDBCRepository.save(SourceEntity.fromExistingSource(updated)));
+	}
+
+	@Override
+	public void storeArticleContent(String sourceId, String articleContent) {
+		sourceJDBCRepository.findById(UUID.fromString(sourceId))
+				.map(entity -> {
+					var source = entity.toSource();
+					return SourceEntity.fromExistingSource(new Source(
+							source.sourceId(),
+							source.type(),
+							source.title(),
+							source.content(),
+							source.createdAt(),
+							source.updatedAt(),
+							source.articleReadAt(),
+							source.userId(),
+							articleContent,
+							source.summarizedAt()));
+				})
+				.ifPresent(sourceJDBCRepository::save);
+	}
+
+	@Override
+	public void markAsSummarized(String sourceId) {
+		sourceJDBCRepository.findById(UUID.fromString(sourceId))
+				.map(SourceEntity::toSource)
+				.map(source -> new Source(
+						source.sourceId(),
+						source.type(),
+						source.title(),
+						source.content(),
+						source.createdAt(),
+						LocalDateTime.now(),
+						source.articleReadAt(),
+						source.userId(),
+						source.articleContent(),
 						LocalDateTime.now()))
 				.ifPresent(updated -> sourceJDBCRepository.save(SourceEntity.fromExistingSource(updated)));
 	}

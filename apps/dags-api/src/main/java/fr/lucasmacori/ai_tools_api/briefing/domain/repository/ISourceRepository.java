@@ -4,13 +4,14 @@ import java.util.List;
 import java.util.Optional;
 
 import fr.lucasmacori.ai_tools_api.briefing.domain.model.Source;
+import fr.lucasmacori.ai_tools_api.briefing.domain.model.SourceType;
 
 public interface ISourceRepository {
-	List<Source> findAll();
+	List<Source> findAllByUserId(String userId);
 
-	List<Source> findByType(fr.lucasmacori.ai_tools_api.briefing.domain.model.SourceType type);
+	List<Source> findByTypeAndUserId(SourceType type, String userId);
 
-	List<Source> findUnreadArticleSources();
+	List<Source> findUnreadArticleSourcesByUserId(String userId);
 
 	Source create(Source source);
 
@@ -19,6 +20,10 @@ public interface ISourceRepository {
 	Source update(Source source);
 
 	void markArticleAsRead(String sourceId);
+
+	void storeArticleContent(String sourceId, String articleContent);
+
+	void markAsSummarized(String sourceId);
 
 	void deleteById(String sourceId);
 }

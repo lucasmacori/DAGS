@@ -34,8 +34,8 @@ class ArticleReadServiceTest {
 				LocalDateTime.now(),
 				null);
 
-		when(sourceService.getUnreadArticleSources()).thenReturn(List.of(articleSource));
-		when(rssSourceItemRepository.findUnreadArticleLinks("hardcoded-user-id"))
+		when(sourceService.getUnreadArticleSources("user-1")).thenReturn(List.of(articleSource));
+		when(rssSourceItemRepository.findUnreadArticleLinks("user-1"))
 				.thenReturn(List.of(
 						new RssSourceItemLink("rss-1", "https://example.com/article"),
 						new RssSourceItemLink("rss-2", "https://example.com/another")));
@@ -46,13 +46,13 @@ class ArticleReadServiceTest {
 
 		ArticleReadService service = new ArticleReadService(sourceService, rssSourceItemRepository, articleContentClient);
 
-		service.readAllArticles();
+		service.readAllArticles("user-1");
 
 		verify(articleContentClient, times(1)).readArticle("https://example.com/article");
 		verify(articleContentClient, times(1)).readArticle("https://example.com/another");
 		verify(sourceService).markArticleAsRead("source-1");
-		verify(rssSourceItemRepository).markArticleLinkAsRead("hardcoded-user-id", "rss-1");
-		verify(rssSourceItemRepository).markArticleLinkAsRead("hardcoded-user-id", "rss-2");
+		verify(rssSourceItemRepository).markArticleLinkAsRead("user-1", "rss-1");
+		verify(rssSourceItemRepository).markArticleLinkAsRead("user-1", "rss-2");
 	}
 
 	@Test
@@ -61,12 +61,12 @@ class ArticleReadServiceTest {
 		IRssSourceItemRepository rssSourceItemRepository = mock(IRssSourceItemRepository.class);
 		ArticleContentClient articleContentClient = mock(ArticleContentClient.class);
 
-		when(sourceService.getUnreadArticleSources()).thenReturn(List.of());
-		when(rssSourceItemRepository.findUnreadArticleLinks("hardcoded-user-id")).thenReturn(List.of());
+		when(sourceService.getUnreadArticleSources("user-1")).thenReturn(List.of());
+		when(rssSourceItemRepository.findUnreadArticleLinks("user-1")).thenReturn(List.of());
 
 		ArticleReadService service = new ArticleReadService(sourceService, rssSourceItemRepository, articleContentClient);
 
-		service.readAllArticles();
+		service.readAllArticles("user-1");
 
 		verify(articleContentClient, never()).readArticle("https://example.com/article");
 	}

@@ -11,7 +11,13 @@ public interface IRssSourceItemRepository {
 
 	List<RssSourceItemLink> findUnreadArticleLinks(String userId);
 
+	List<RssSourceItemLink> findUnsummarizedArticleLinks(String userId);
+
 	void markArticleAsRead(String userId, Source source, RssFeedArticle article);
 
 	void markArticleLinkAsRead(String userId, String rssSourceItemId);
+
+	void storeArticleContent(String rssSourceItemId, String content);
+
+	void markAsSummarized(String rssSourceItemId);
 }

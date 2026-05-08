@@ -1,6 +1,7 @@
 package fr.lucasmacori.ai_tools_api.briefing.application.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
@@ -69,7 +70,7 @@ class SourceControllerTest {
 
 	@Test
 	void getSourcesReturnsList() {
-		when(applicationService.getSources()).thenReturn(List.of(
+		when(applicationService.getSources("user-1")).thenReturn(List.of(
 				new Source("source-1", SourceType.PLAIN_TEXT, "Notes", "hello", LocalDateTime.parse("2026-04-19T23:00:00"), LocalDateTime.parse("2026-04-19T23:00:00"), null),
 				new Source("source-2", SourceType.RSS_FEED, "Feed", "https://example.com/rss", LocalDateTime.parse("2026-04-19T23:05:00"), LocalDateTime.parse("2026-04-19T23:05:00"), null)));
 
@@ -118,7 +119,7 @@ class SourceControllerTest {
 	@Test
 	void createSourceReturnsCreatedSource() {
 		Source source = new Source("source-1", SourceType.PLAIN_TEXT, "Notes", "hello", LocalDateTime.parse("2026-04-19T23:00:00"), LocalDateTime.parse("2026-04-19T23:00:00"), null);
-		when(applicationService.createSource(any())).thenReturn(source);
+		when(applicationService.createSource(any(), eq("user-1"))).thenReturn(source);
 
 		authenticatedClient().post()
 				.uri("/api/v1/source")

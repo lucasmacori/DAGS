@@ -22,26 +22,24 @@ public class ArticleReadService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ArticleReadService.class);
 
-	private static final String DEFAULT_USER_ID = "hardcoded-user-id";
-
 	private final SourceService sourceService;
 	private final IRssSourceItemRepository rssSourceItemRepository;
 	private final ArticleContentClient articleContentClient;
 
-	public void readAllArticles() {
+	public void readAllArticles(String userId) {
 		Map<String, ReadTargets> targetsByUrl = new LinkedHashMap<>();
 
-		List<Source> articleSources = sourceService.getUnreadArticleSources();
+		List<Source> articleSources = sourceService.getUnreadArticleSources(userId);
 		for (Source source : articleSources) {
 			addSourceTarget(targetsByUrl, source);
 		}
 
-		for (RssSourceItemLink link : rssSourceItemRepository.findUnreadArticleLinks(DEFAULT_USER_ID)) {
+		for (RssSourceItemLink link : rssSourceItemRepository.findUnreadArticleLinks(userId)) {
 			addRssTarget(targetsByUrl, link);
 		}
 
 		for (Map.Entry<String, ReadTargets> entry : targetsByUrl.entrySet()) {
-			readAndMark(entry.getKey(), entry.getValue());
+			readAndMark(userId, entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -63,16 +61,18 @@ public class ArticleReadService {
 		targetsByUrl.computeIfAbsent(url.trim(), ignored -> new ReadTargets()).rssItemIds().add(item.rssSourceItemId());
 	}
 
-	private void readAndMark(String url, ReadTargets targets) {
+	private void readAndMark(String userId, String url, ReadTargets targets) {
 
 		try {
 			ArticleContent article = articleContentClient.readArticle(url);
-			logArticle(article);
+			logArticle(userId, article);
 			for (String sourceId : targets.sourceIds()) {
 				sourceService.markArticleAsRead(sourceId);
+				sourceService.storeArticleContent(sourceId, article.content());
 			}
 			for (String rssSourceItemId : targets.rssItemIds()) {
-				rssSourceItemRepository.markArticleLinkAsRead(DEFAULT_USER_ID, rssSourceItemId);
+				rssSourceItemRepository.markArticleLinkAsRead(userId, rssSourceItemId);
+				rssSourceItemRepository.storeArticleContent(rssSourceItemId, article.content());
 			}
 		}
 		catch (RuntimeException exception) {
@@ -80,12 +80,12 @@ public class ArticleReadService {
 		}
 	}
 
-	private void logArticle(ArticleContent article) {
-		LOGGER.info("[ARTICLE][READ] userId={} url={} title=\"{}\" content=\"{}\"",
-				DEFAULT_USER_ID,
+	private void logArticle(String userId, ArticleContent article) {
+		LOGGER.info("[ARTICLE][READ] userId={} url={} title=\"{}\" contentLength={}",
+				userId,
 				article.url(),
 				article.title(),
-				article.content());
+				article.content().length());
 	}
 
 	private static final class ReadTargets {

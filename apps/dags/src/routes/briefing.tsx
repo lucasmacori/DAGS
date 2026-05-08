@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Topbar } from '../components/layout/Topbar'
 import { SourceModal } from '../components/briefing/SourceModal'
-import type { Source, SourceType } from '../lib/briefing-types'
+import type { Source, SourceType, BriefingSettings, Briefing } from '../lib/briefing-types'
 import { formatSyncedAt } from '../lib/briefing-types'
 
 export const Route = createFileRoute('/briefing')({
@@ -44,7 +44,7 @@ function getSourceDisplayDetails(type: SourceType) {
 
 function BriefingPage() {
   const [sources, setSources] = useState<Source[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingSources, setIsLoadingSources] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const [activeFilter, setActiveFilter] = useState<SourceType | 'ALL'>('ALL')
@@ -53,8 +53,21 @@ function BriefingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSource, setEditingSource] = useState<Source | null>(null)
 
+  const [settings, setSettings] = useState<BriefingSettings | null>(null)
+  const [settingsLoading, setSettingsLoading] = useState(true)
+  const [systemPrompt, setSystemPrompt] = useState('')
+  const [generationTime, setGenerationTime] = useState('08:00')
+  const [frequency, setFrequency] = useState('DAILY')
+  const [enabled, setEnabled] = useState(false)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
+
+  const [generatedBriefing, setGeneratedBriefing] = useState<Briefing | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [generateError, setGenerateError] = useState<string | null>(null)
+
   const fetchSources = async () => {
-    setIsLoading(true)
+    setIsLoadingSources(true)
     setError(null)
     try {
       const res = await fetch('/source')
@@ -62,18 +75,38 @@ function BriefingPage() {
         throw new Error('Failed to load sources.')
       }
       const data = await res.json() as Source[]
-      // Sort newest first by updated_at
       data.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
       setSources(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load sources.')
     } finally {
-      setIsLoading(false)
+      setIsLoadingSources(false)
+    }
+  }
+
+  const fetchSettings = async () => {
+    setSettingsLoading(true)
+    try {
+      const res = await fetch('/briefing/settings')
+      if (!res.ok) {
+        throw new Error('Failed to load settings.')
+      }
+      const data = await res.json() as BriefingSettings
+      setSettings(data)
+      setSystemPrompt(data.system_prompt)
+      setGenerationTime(data.generation_time)
+      setFrequency(data.frequency)
+      setEnabled(data.enabled)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load settings.')
+    } finally {
+      setSettingsLoading(false)
     }
   }
 
   useEffect(() => {
     fetchSources()
+    fetchSettings()
   }, [])
 
   const handleSaveSource = async (sourceData: { type: string; title: string; content: string }) => {
@@ -108,6 +141,62 @@ function BriefingPage() {
     }
   }
 
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true)
+    setSettingsMessage(null)
+    try {
+      const res = await fetch('/briefing/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          enabled,
+          frequency,
+          generation_time: generationTime,
+          system_prompt: systemPrompt,
+        }),
+      })
+      if (!res.ok) {
+        throw new Error(await res.text() || 'Failed to save settings.')
+      }
+      const data = await res.json() as BriefingSettings
+      setSettings(data)
+      setSettingsMessage('Settings saved.')
+    } catch (err) {
+      setSettingsMessage(err instanceof Error ? err.message : 'Error saving settings.')
+    } finally {
+      setSettingsSaving(false)
+    }
+  }
+
+  const handleGenerateBriefing = async () => {
+    setIsGenerating(true)
+    setGenerateError(null)
+    setGeneratedBriefing(null)
+    try {
+      // First, trigger reading of latest sources
+      await Promise.all([
+        fetch('/source/rss/read', { method: 'POST' }).catch(err => console.error('Failed to trigger RSS read:', err)),
+        fetch('/source/articles/read', { method: 'POST' }).catch(err => console.error('Failed to trigger Articles read:', err))
+      ])
+
+      // Wait a moment to give the background jobs time to fetch new articles
+      // Note: In a production app, we would use WebSockets/SSE to know when the jobs are done
+      // or the backend would wait for the jobs to finish before returning.
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      const res = await fetch('/briefing/generate', { method: 'POST' })
+      if (!res.ok) {
+        throw new Error(await res.text() || 'Failed to generate briefing.')
+      }
+      const data = await res.json() as Briefing
+      setGeneratedBriefing(data)
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'Error generating briefing.')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const filteredSources = activeFilter === 'ALL' 
     ? sources 
     : sources.filter(s => s.type === activeFilter)
@@ -132,8 +221,13 @@ function BriefingPage() {
             </p>
           </div>
           <div className="briefing-header__actions">
-            <button className="ghost-button" type="button">
-              Preview Summary
+            <button
+              className="ghost-button"
+              type="button"
+              onClick={handleGenerateBriefing}
+              disabled={isGenerating}
+            >
+              {isGenerating ? 'Generating...' : 'Preview Summary'}
             </button>
             <button 
               className="primary-button briefing-header__add-btn" 
@@ -163,11 +257,12 @@ function BriefingPage() {
                 <textarea 
                   className="briefing-template-card__textarea" 
                   spellCheck="false"
-                  defaultValue={"Summarize the following sources : ${sources.text} ${sources.links} ${sources.feeds}"}
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
                 />
                 <p className="briefing-template-card__hint">
                   <span className="material-symbols-outlined">info</span>
-                  Variables are injected dynamically at runtime.
+                  This system prompt is sent to the AI model when generating your briefing.
                 </p>
               </div>
             </details>
@@ -185,13 +280,10 @@ function BriefingPage() {
                     <span className="material-symbols-outlined">mail</span>
                     <div>
                       <p className="briefing-notification-item__title">Email Delivery</p>
-                      <p className="briefing-notification-item__desc">alex@company.net</p>
+                      <p className="briefing-notification-item__desc">Not configured</p>
                     </div>
                   </div>
-                  <label className="briefing-toggle briefing-toggle--small">
-                    <input type="checkbox" className="briefing-toggle__input" defaultChecked />
-                    <span className="briefing-toggle__slider"></span>
-                  </label>
+                  <button className="briefing-notification-item__setup" type="button">Setup</button>
                 </div>
 
                 <div className="briefing-notification-item">
@@ -248,7 +340,7 @@ function BriefingPage() {
               </div>
 
               <div className="briefing-cards-grid">
-                {isLoading && sources.length === 0 && (
+                {isLoadingSources && sources.length === 0 && (
                   <p className="briefing-sources__loading">Loading sources...</p>
                 )}
                 {error && (
@@ -348,7 +440,12 @@ function BriefingPage() {
                     <p className="briefing-toggle-row__description">Daily orchestration of synthesis.</p>
                   </div>
                   <label className="briefing-toggle">
-                    <input type="checkbox" className="briefing-toggle__input" defaultChecked />
+                    <input
+                      type="checkbox"
+                      className="briefing-toggle__input"
+                      checked={enabled}
+                      onChange={(e) => setEnabled(e.target.checked)}
+                    />
                     <span className="briefing-toggle__slider"></span>
                   </label>
                 </div>
@@ -356,9 +453,24 @@ function BriefingPage() {
                 <div className="briefing-schedule-group">
                   <span className="briefing-schedule-label">Frequency</span>
                   <div className="briefing-frequency-grid">
-                    <button className="briefing-frequency-btn briefing-frequency-btn--active">Daily</button>
-                    <button className="briefing-frequency-btn">Weekly</button>
-                    <button className="briefing-frequency-btn">Custom</button>
+                    <button
+                      className={`briefing-frequency-btn ${frequency === 'DAILY' ? 'briefing-frequency-btn--active' : ''}`}
+                      onClick={() => setFrequency('DAILY')}
+                    >
+                      Daily
+                    </button>
+                    <button
+                      className={`briefing-frequency-btn ${frequency === 'WEEKLY' ? 'briefing-frequency-btn--active' : ''}`}
+                      onClick={() => setFrequency('WEEKLY')}
+                    >
+                      Weekly
+                    </button>
+                    <button
+                      className={`briefing-frequency-btn ${frequency === 'CUSTOM' ? 'briefing-frequency-btn--active' : ''}`}
+                      onClick={() => setFrequency('CUSTOM')}
+                    >
+                      Custom
+                    </button>
                   </div>
                 </div>
 
@@ -366,23 +478,63 @@ function BriefingPage() {
                   <span className="briefing-schedule-label">Delivery Time</span>
                   <div className="briefing-time-picker">
                     <span className="material-symbols-outlined briefing-time-picker__icon">schedule</span>
-                    <div className="briefing-time-picker__value">
-                      <span className="briefing-time-picker__time">08:00</span>
-                      <span className="briefing-time-picker__ampm">AM</span>
-                    </div>
-                    <div className="briefing-time-picker__controls">
-                      <button className="material-symbols-outlined">expand_less</button>
-                      <button className="material-symbols-outlined">expand_more</button>
-                    </div>
+                    <input
+                      type="time"
+                      className="briefing-time-picker__input"
+                      value={generationTime}
+                      onChange={(e) => setGenerationTime(e.target.value)}
+                    />
                   </div>
                   <p className="briefing-schedule-hint">
                     Summaries will be delivered to your central 'Briefings' hub and via encrypted email.
                   </p>
                 </div>
               </div>
-              <button className="briefing-update-btn briefing-update-btn--spaced">Update Configuration</button>
+
+              {settingsMessage && (
+                <p className={`briefing-settings-message ${settingsMessage === 'Settings saved.' ? '' : 'briefing-settings-message--error'}`}>
+                  {settingsMessage}
+                </p>
+              )}
+
+              <button
+                className="briefing-update-btn briefing-update-btn--spaced"
+                type="button"
+                onClick={handleSaveSettings}
+                disabled={settingsSaving}
+              >
+                {settingsSaving ? 'Saving...' : 'Update Configuration'}
+              </button>
             </div>
           </div>
+
+          {generatedBriefing && (
+            <div className="briefing-dashboard__wide">
+              <div className="briefing-result">
+                <div className="briefing-result__header">
+                  <h3 className="briefing-section-title">
+                    <span className="material-symbols-outlined">summarize</span>
+                    Generated Briefing
+                  </h3>
+                  <span className="briefing-result__meta">
+                    {generatedBriefing.article_count} article{generatedBriefing.article_count !== 1 ? 's' : ''} summarized
+                  </span>
+                </div>
+                <div className="briefing-result__content">
+                  {generatedBriefing.content.split('\n').map((line, i) => (
+                    <p key={i}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {generateError && (
+            <div className="briefing-dashboard__wide">
+              <p className="briefing-sources__error">{generateError}</p>
+            </div>
+          )}
+
         </div>
       </div>
 

@@ -26,10 +26,10 @@ class SourceApplicationServiceTest {
 	void getSourcesDelegatesToDomainService() {
 		SourceService sourceService = mock(SourceService.class);
 		List<Source> expected = List.of(new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now(), null));
-		when(sourceService.getSources()).thenReturn(expected);
+		when(sourceService.getSources("user-1")).thenReturn(expected);
 		SourceApplicationService applicationService = new SourceApplicationService(sourceService);
 
-		List<Source> result = applicationService.getSources();
+		List<Source> result = applicationService.getSources("user-1");
 
 		assertEquals(expected, result);
 	}
@@ -38,10 +38,10 @@ class SourceApplicationServiceTest {
 	void createSourceDelegatesToDomainService() {
 		SourceService sourceService = mock(SourceService.class);
 		Source source = new Source("source-1", SourceType.PLAIN_TEXT, "Title", "Body", LocalDateTime.now(), LocalDateTime.now(), null);
-		when(sourceService.create(SourceType.PLAIN_TEXT, "Title", "Body")).thenReturn(source);
+		when(sourceService.create(SourceType.PLAIN_TEXT, "Title", "Body", "user-1")).thenReturn(source);
 		SourceApplicationService applicationService = new SourceApplicationService(sourceService);
 
-		Source result = applicationService.createSource(new CreateSourceRequestBody(SourceType.PLAIN_TEXT, "Title", "Body"));
+		Source result = applicationService.createSource(new CreateSourceRequestBody(SourceType.PLAIN_TEXT, "Title", "Body"), "user-1");
 
 		assertEquals(source, result);
 	}

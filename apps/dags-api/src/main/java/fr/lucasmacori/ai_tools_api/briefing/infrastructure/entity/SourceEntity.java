@@ -23,18 +23,23 @@ public class SourceEntity implements Persistable<UUID> {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 	private LocalDateTime articleReadAt;
+	private UUID userId;
+	private String articleContent;
+	private LocalDateTime summarizedAt;
 
 	@Transient
 	private boolean isNew;
 
 	@PersistenceCreator
-	public SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt,
-			LocalDateTime articleReadAt) {
-		this(sourceId, type, title, content, createdAt, updatedAt, articleReadAt, false);
+	public SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt,
+			LocalDateTime updatedAt, LocalDateTime articleReadAt, UUID userId, String articleContent,
+			LocalDateTime summarizedAt) {
+		this(sourceId, type, title, content, createdAt, updatedAt, articleReadAt, userId, articleContent, summarizedAt, false);
 	}
 
-	private SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt, LocalDateTime updatedAt,
-			LocalDateTime articleReadAt, boolean isNew) {
+	private SourceEntity(UUID sourceId, String type, String title, String content, LocalDateTime createdAt,
+			LocalDateTime updatedAt, LocalDateTime articleReadAt, UUID userId, String articleContent,
+			LocalDateTime summarizedAt, boolean isNew) {
 		this.sourceId = sourceId;
 		this.type = type;
 		this.title = title;
@@ -42,6 +47,9 @@ public class SourceEntity implements Persistable<UUID> {
 		this.createdAt = createdAt;
 		this.updatedAt = updatedAt;
 		this.articleReadAt = articleReadAt;
+		this.userId = userId;
+		this.articleContent = articleContent;
+		this.summarizedAt = summarizedAt;
 		this.isNew = isNew;
 	}
 
@@ -54,6 +62,9 @@ public class SourceEntity implements Persistable<UUID> {
 				source.createdAt(),
 				source.updatedAt(),
 				source.articleReadAt(),
+				source.userId() != null ? UUID.fromString(source.userId()) : null,
+				source.articleContent(),
+				source.summarizedAt(),
 				true);
 	}
 
@@ -66,6 +77,9 @@ public class SourceEntity implements Persistable<UUID> {
 				source.createdAt(),
 				source.updatedAt(),
 				source.articleReadAt(),
+				source.userId() != null ? UUID.fromString(source.userId()) : null,
+				source.articleContent(),
+				source.summarizedAt(),
 				false);
 	}
 
@@ -77,7 +91,10 @@ public class SourceEntity implements Persistable<UUID> {
 				content,
 				createdAt,
 				updatedAt,
-				articleReadAt);
+				articleReadAt,
+				userId != null ? userId.toString() : null,
+				articleContent,
+				summarizedAt);
 	}
 
 	@Override

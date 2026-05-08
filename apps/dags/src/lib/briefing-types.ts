@@ -9,6 +9,22 @@ export type Source = {
   updated_at: string
 }
 
+export type BriefingSettings = {
+  enabled: boolean
+  frequency: string
+  generation_time: string
+  system_prompt: string
+  created_at: string
+  updated_at: string
+}
+
+export type Briefing = {
+  briefing_id: string
+  content: string
+  article_count: number
+  created_at: string
+}
+
 export function formatSyncedAt(isoString: string): string {
   const date = new Date(isoString)
   if (Number.isNaN(date.getTime())) return 'Unknown'

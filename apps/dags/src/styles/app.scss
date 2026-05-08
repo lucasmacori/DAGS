@@ -2851,6 +2851,25 @@ textarea {
   }
 }
 
+.briefing-time-picker__input {
+  background: transparent;
+  border: none;
+  color: $text-primary;
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-calendar-picker-indicator {
+    display: none;
+  }
+
+  &:focus {
+    color: $primary-soft;
+  }
+}
+
 .briefing-schedule-hint {
   margin: 0;
   font-size: 0.6875rem;
@@ -2878,6 +2897,51 @@ textarea {
 
 .briefing-update-btn--spaced {
   margin-top: 0.5rem;
+}
+
+.briefing-settings-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  color: $text-primary;
+  background: $surface-high;
+  text-align: center;
+
+  &--error {
+    color: $danger;
+    background: rgba($danger, 0.1);
+  }
+}
+
+.briefing-result {
+  background: $surface-lowest;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  border: 1px solid rgba($primary-soft, 0.2);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: $text-muted;
+    font-weight: 500;
+  }
+
+  &__content {
+    color: $text-primary;
+    font-size: 0.875rem;
+    line-height: 1.6;
+
+    p {
+      margin: 0.5rem 0;
+    }
+  }
 }
 
 @media (min-width: 768px) {

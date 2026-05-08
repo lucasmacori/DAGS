@@ -20,32 +20,30 @@ public class RssFeedReadService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(RssFeedReadService.class);
 
-	private static final String DEFAULT_USER_ID = "hardcoded-user-id";
-
 	private final ISourceRepository sourceRepository;
 	private final IRssSourceItemRepository rssSourceItemRepository;
 	private final RssFeedClient rssFeedClient;
 
-	public void readAllFeeds() {
-		List<Source> rssSources = sourceRepository.findAll().stream()
+	public void readAllFeeds(String userId) {
+		List<Source> rssSources = sourceRepository.findAllByUserId(userId).stream()
 				.filter(source -> source.type() == SourceType.RSS_FEED)
 				.toList();
 
 		for (Source source : rssSources) {
-			readFeed(source);
+			readFeed(userId, source);
 		}
 	}
 
-	private void readFeed(Source source) {
+	private void readFeed(String userId, Source source) {
 		try {
 			List<RssFeedArticle> articles = rssFeedClient.readArticles(source.content());
 			for (RssFeedArticle article : articles) {
-				if (rssSourceItemRepository.hasArticleBeenRead(DEFAULT_USER_ID, source.sourceId(), article.externalId())) {
+				if (rssSourceItemRepository.hasArticleBeenRead(userId, source.sourceId(), article.externalId())) {
 					continue;
 				}
 
-				logUnreadArticle(source, article);
-				rssSourceItemRepository.markArticleAsRead(DEFAULT_USER_ID, source, article);
+				logUnreadArticle(userId, source, article);
+				rssSourceItemRepository.markArticleAsRead(userId, source, article);
 			}
 		}
 		catch (RuntimeException exception) {
@@ -53,10 +51,10 @@ public class RssFeedReadService {
 		}
 	}
 
-	private void logUnreadArticle(Source source, RssFeedArticle article) {
+	private void logUnreadArticle(String userId, Source source, RssFeedArticle article) {
 		LOGGER.info(
 				"[RSS][NEW] userId={} sourceId={} sourceTitle=\"{}\" articleTitle=\"{}\" link={} publishedAt={}",
-				DEFAULT_USER_ID,
+				userId,
 				source.sourceId(),
 				source.title(),
 				article.title(),

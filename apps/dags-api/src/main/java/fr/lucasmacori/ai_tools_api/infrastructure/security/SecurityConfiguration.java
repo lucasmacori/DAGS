@@ -37,6 +37,7 @@ public class SecurityConfiguration {
 				.httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
 				.authorizeExchange(exchanges -> exchanges
 						.pathMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh", "/api/v1/auth/logout").permitAll()
+						.pathMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
 						.anyExchange().authenticated())
 				.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
 				.build();

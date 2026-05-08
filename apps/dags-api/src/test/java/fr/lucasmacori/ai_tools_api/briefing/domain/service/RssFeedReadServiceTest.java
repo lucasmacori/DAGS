@@ -43,18 +43,18 @@ class RssFeedReadServiceTest {
 		RssFeedArticle unreadArticle = new RssFeedArticle("article-1", "Unread", "https://example.com/a", LocalDateTime.now());
 		RssFeedArticle readArticle = new RssFeedArticle("article-2", "Read", "https://example.com/b", LocalDateTime.now());
 
-		when(sourceRepository.findAll()).thenReturn(List.of(rssSource, plainTextSource));
+		when(sourceRepository.findAllByUserId("user-1")).thenReturn(List.of(rssSource, plainTextSource));
 		when(rssFeedClient.readArticles("https://example.com/rss")).thenReturn(List.of(unreadArticle, readArticle));
-		when(rssSourceItemRepository.hasArticleBeenRead("hardcoded-user-id", "source-1", "article-1")).thenReturn(false);
-		when(rssSourceItemRepository.hasArticleBeenRead("hardcoded-user-id", "source-1", "article-2")).thenReturn(true);
+		when(rssSourceItemRepository.hasArticleBeenRead("user-1", "source-1", "article-1")).thenReturn(false);
+		when(rssSourceItemRepository.hasArticleBeenRead("user-1", "source-1", "article-2")).thenReturn(true);
 
 		RssFeedReadService service = new RssFeedReadService(sourceRepository, rssSourceItemRepository, rssFeedClient);
 
-		service.readAllFeeds();
+		service.readAllFeeds("user-1");
 
 		verify(rssFeedClient).readArticles("https://example.com/rss");
 		verify(rssFeedClient, never()).readArticles("hello");
-		verify(rssSourceItemRepository).markArticleAsRead("hardcoded-user-id", rssSource, unreadArticle);
-		verify(rssSourceItemRepository, never()).markArticleAsRead("hardcoded-user-id", rssSource, readArticle);
+		verify(rssSourceItemRepository).markArticleAsRead("user-1", rssSource, unreadArticle);
+		verify(rssSourceItemRepository, never()).markArticleAsRead("user-1", rssSource, readArticle);
 	}
 }
